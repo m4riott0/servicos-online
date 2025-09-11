@@ -1,0 +1,329 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
+import { authService } from '../services/authService';
+import { registerService } from '../services/registerService';
+import type { User, CPFVerificationResponse } from '../types/api';
+import { useToast } from '../hooks/use-toast';
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (cpf: number, senha: string) => Promise<boolean>;
+  logout: () => void;
+  verificaCPF: (cpf: number) => Promise<CPFVerificationResponse | null>;
+  register: (cpf: number, senha: string) => Promise<boolean>;
+  createAccount: (cpf: number) => Promise<boolean>;
+  registerContact: (cpf: number, type: 'phone' | 'email', contact: string) => Promise<boolean>;
+  confirmContact: (cpf: number, type: 'phone' | 'email', contact: string, token: string) => Promise<boolean>;
+  resendSMS: (cpf: number) => Promise<boolean>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const isAuthenticated = !!user;
+
+  useEffect(() => {
+    const initializeToken = async () => {
+      try {
+        const storedToken = apiClient.getStoredToken();
+        
+        if (!storedToken) {
+          const credentials = {
+            usuario: "mixd",
+            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137"
+          };
+          const token = await authService.generateToken(credentials);
+          apiClient.setToken(token);
+        }
+      } catch (error) {
+        console.error('Error initializing token:', error);
+        // Try to generate token anyway
+        try {
+          const credentials = {
+            usuario: "mixd",
+            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137"
+          };
+          const token = await authService.generateToken(credentials);
+          apiClient.setToken(token);
+        } catch (tokenError) {
+          console.error('Failed to generate token:', tokenError);
+        }
+      }
+    };
+
+    initializeToken();
+  }, []);
+
+  const verificaCPF = async (cpf: number): Promise<CPFVerificationResponse | null> => {
+    try {
+      setIsLoading(true);
+      
+      const response = await authService.verificaCPF({ cpf });
+      return response;
+    } catch (error) {
+      console.error('Error verifying CPF:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao verificar CPF. Tente novamente.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (cpf: number, senha: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+
+      const authResponse = await authService.authenticate({
+        codigoPlano: 0,
+        codigoContrato: 0,
+        cpf,
+        senha,
+      });
+
+      if (authResponse.sucesso) {
+        const profilesResponse = await authService.getAccountProfiles({ cpf, senha });
+        if (profilesResponse.sucesso && profilesResponse.dados) {
+          const userData: User = {
+            id: cpf.toString(),
+            nome: profilesResponse.dados.nome || profilesResponse.dados.dados?.nome || 'Usuário',
+            cpf,
+            email: profilesResponse.dados.email || profilesResponse.dados.dados?.email || '',
+            celular: profilesResponse.dados.celular || profilesResponse.dados.dados?.celular || '',
+            perfilAutenticado: profilesResponse.dados.perfilAutenticado || profilesResponse.dados.dados?.perfilAutenticado,
+          };
+          setUser(userData);
+          toast({
+            title: "Sucesso",
+            description: "Login realizado com sucesso!",
+          });
+          return true;
+        }
+      }
+      toast({
+        title: "Erro",
+        description: authResponse.erro || "Credenciais inválidas.",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (cpf: number, senha: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const response = await registerService.registerPassword({ cpf, senha });
+      if (response.sucesso) {
+        toast({
+          title: "Sucesso",
+          description: "Conta criada com sucesso!",
+        });
+        return true;
+      }
+      toast({
+        title: "Erro",
+        description: response.erro || "Erro ao criar conta.",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createAccount = async (cpf: number): Promise<boolean> => {
+    try {
+      const response = await registerService.createAccount({ cpf });
+      
+      if (response.sucesso) {
+        toast({
+          title: "Conta criada",
+          description: "Conta criada com sucesso!",
+        });
+        return true;
+      }
+
+      toast({
+        title: "Erro",
+        description: response.erro || "Erro ao criar conta.",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Create account error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const registerContact = async (cpf: number, type: 'phone' | 'email', contact: string): Promise<boolean> => {
+    try {
+      let response;
+      
+      if (type === 'phone') {
+        response = await registerService.registerPhone({ cpf, celular: parseInt(contact) });
+      } else {
+        response = await registerService.registerEmail({ cpf, email: contact });
+      }
+      
+      if (response.sucesso) {
+        toast({
+          title: "Código enviado",
+          description: `Código de verificação enviado para seu ${type === 'phone' ? 'celular' : 'e-mail'}.`,
+        });
+        return true;
+      }
+
+      toast({
+        title: "Erro",
+        description: response.erro || `Erro ao enviar código para ${type === 'phone' ? 'celular' : 'e-mail'}.`,
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Register contact error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const confirmContact = async (cpf: number, type: 'phone' | 'email', contact: string, token: string): Promise<boolean> => {
+    try {
+      let response;
+      
+      if (type === 'phone') {
+        response = await registerService.confirmPhone({ cpf, celular: parseInt(contact), tokenSMS: token });
+      } else {
+        response = await registerService.confirmEmail({ cpf, email: contact, tokenEmail: token });
+      }
+      
+      if (response.sucesso) {
+        toast({
+          title: "Verificação confirmada",
+          description: `${type === 'phone' ? 'Celular' : 'E-mail'} verificado com sucesso!`,
+        });
+        return true;
+      }
+
+      toast({
+        title: "Código inválido",
+        description: response.erro || "Código de verificação inválido.",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Confirm contact error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const resendSMS = async (cpf: number): Promise<boolean> => {
+    try {
+      const response = await registerService.resendSMS({ cpf });
+      
+      if (response.sucesso) {
+        toast({
+          title: "SMS reenviado",
+          description: "Novo código enviado para seu celular.",
+        });
+        return true;
+      }
+
+      toast({
+        title: "Erro",
+        description: response.erro || "Erro ao reenviar SMS.",
+        variant: "destructive",
+      });
+      return false;
+    } catch (error) {
+      console.error('Resend SMS error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro no servidor. Tente novamente.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    // Don't clear token completely, just clear user data
+    toast({
+      title: "Logout",
+      description: "Você foi desconectado com sucesso.",
+    });
+  };
+
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    logout,
+    verificaCPF,
+    register,
+    createAccount,
+    registerContact,
+    confirmContact,
+    resendSMS,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
