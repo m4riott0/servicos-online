@@ -9,7 +9,15 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server:{
-    open: true
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://apiapp2024.bensaude.com.br',
+        changeOrigin: true,
+        secure: false,
+      },
+    }
+    
   },
   resolve: {
     alias: {

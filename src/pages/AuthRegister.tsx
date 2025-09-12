@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Eye, EyeOff, Lock, ArrowLeft, CheckCircle, Mail, Phone } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import LoginHero from '../assets/login-hero.png';
 
 interface AuthRegisterProps {
   cpf: string;
@@ -318,7 +319,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
   const renderPasswordForm = () => (
     <Card className="card-medical">
       <CardHeader>
-        <CardTitle className="text-center">Criar Senha</CardTitle>
+        <CardTitle className="text-center ">Olá {userInfo.nome}</CardTitle>
         <CardDescription className="text-center">
           Defina uma senha para acessar sua conta
         </CardDescription>
@@ -401,10 +402,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left side - Image */}
       <div className="hidden lg:block relative bg-gradient-medical">
-        <div className="absolute bottom-8 left-8 text-white">
-          <h2 className="text-4xl font-bold mb-2">Bensaude Saúde</h2>
-          <p className="text-xl opacity-90">Cuidando da sua saúde com excelência</p>
-        </div>
+        <img
+          src={LoginHero}
+          alt="login Hero"
+          className="absolute inset-0 w-full h-full object-cover opacity-80"
+        />
       </div>
 
       {/* Right side - Register Form */}
@@ -412,25 +414,19 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mb-4 shadow-medical">
-              <span className="text-primary-foreground font-bold text-2xl">B</span>
-            </div>
-            <h1 className="text-3xl font-bold gradient-text-medical">
+            <h1 className="text-3xl font-bold text-blue-500">
               {step === 'password' ? 'Criar Senha' : 'Cadastro'}
             </h1>
-            <p className="text-muted-foreground mt-2">
-              Olá, <span className="font-semibold">{userInfo.nome}</span>
-            </p>
           </div>
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step === 'contact' ? 'text-primary' : contactRegistered ? 'text-green-500' : 'text-muted-foreground'}`}>
+            <div className={`flex items-center ${step === 'contact' ? 'text-primary' : contactRegistered ? 'text-blue-500' : 'text-muted-foreground'}`}>
               {contactRegistered ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
               <span className="ml-2 text-sm">Contato</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
-            <div className={`flex items-center ${step === 'verification' ? 'text-primary' : step === 'password' ? 'text-green-500' : 'text-muted-foreground'}`}>
+            <div className={`flex items-center ${step === 'verification' ? 'text-primary' : step === 'password' ? 'text-blue-500' : 'text-muted-foreground'}`}>
               {step === 'password' ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
               <span className="ml-2 text-sm">Verificação</span>
             </div>

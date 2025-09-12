@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Eye, EyeOff, Lock, User, ArrowLeft } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import loginHero from '../assets/login-hero.png';
+import LoginHero from '../assets/login-hero.png';
 
 interface AuthLoginProps {
   cpf: string;
@@ -55,11 +55,11 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* lado esquerdo */}
-      <div className="hidden lg:block relative bg-gradient-medical">
+       <div className="hidden lg:block relative bg-gradient-medical">
         <img
-          src={loginHero}
-          alt="Bensaude Saúde - Cuidando da sua saúde"
-          className="absolute inset-0 w-full h-full object-cover"
+          src={LoginHero}
+          alt="login Hero"
+          className="absolute inset-0 w-full h-full object-cover opacity-80"
         />
       </div>
 

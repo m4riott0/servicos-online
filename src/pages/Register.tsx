@@ -28,7 +28,7 @@ export const Register: React.FC = () => {
   const { toast } = useToast();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/Home" replace />;
   }
 
   const formatCPF = (value: string) => {
@@ -136,10 +136,7 @@ export const Register: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo and Branding */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mb-4 shadow-medical">
-            <span className="text-primary-foreground font-bold text-2xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold gradient-text-medical mb-2">Bensaude Saúde</h1>
+          <h1 className="text-3xl font-bold gradient-text-medical mb-2">Bensaúde</h1>
           <p className="text-muted-foreground">Criar nova conta</p>
         </div>
 
@@ -249,7 +246,6 @@ export const Register: React.FC = () => {
           {step === 'password' && (
             <>
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Criar Senha</CardTitle>
                 <CardDescription>
                   {cpfData?.nome && `Olá, ${cpfData.nome}! `}
                   Crie uma senha segura para sua conta
