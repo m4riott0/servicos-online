@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '../ui/button';
-import { useAuth } from '../../contexts/AuthContext';
-import { LogOut, User, Bell, Settings } from 'lucide-react';
+import React from "react";
+import { Button } from "../ui/button";
+import { useAuth } from "../../contexts/AuthContext";
+import { LogOut, User, Bell, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
-import { Badge } from '../ui/badge';
+} from "../ui/dropdown-menu";
+import { Badge } from "../ui/badge";
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -24,8 +24,12 @@ export const Header: React.FC = () => {
             <span className="text-primary-foreground font-bold text-lg">B</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold gradient-text-medical">Bensaude Saúde</h1>
-            <p className="text-sm text-muted-foreground">Portal do Beneficiário</p>
+            <h1 className="text-xl font-bold gradient-text-medical">
+              Bensaude Saúde
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Portal do Beneficiário
+            </p>
           </div>
         </div>
 
@@ -34,7 +38,10 @@ export const Header: React.FC = () => {
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="h-5 w-5" />
-            <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            >
               3
             </Badge>
           </Button>
@@ -42,11 +49,16 @@ export const Header: React.FC = () => {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 hover:bg-accent">
+              <Button
+                variant="ghost"
+                className="flex items-center space-x-2 hover:bg-accent"
+              >
                 <User className="h-5 w-5" />
                 <div className="text-left">
                   <p className="text-sm font-medium">{user?.nome}</p>
-                  <p className="text-xs text-muted-foreground">CPF: {user?.cpf}</p>
+                  <p className="text-xs text-muted-foreground">
+                    CPF: {user?.cpf}
+                  </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

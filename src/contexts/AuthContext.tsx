@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { apiClient } from '../services/apiClient';
-import { authService } from '../services/authService';
-import { registerService } from '../services/registerService';
-import type { User, CPFVerificationResponse } from '../types/api';
-import { useToast } from '../hooks/use-toast';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { apiClient } from "../services/apiClient";
+import { authService } from "../services/authService";
+import { registerService } from "../services/registerService";
+import type { User, CPFVerificationResponse } from "../types/api";
+import { useToast } from "../hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -14,8 +14,17 @@ interface AuthContextType {
   verificaCPF: (cpf: number) => Promise<CPFVerificationResponse | null>;
   register: (cpf: number, senha: string) => Promise<boolean>;
   createAccount: (cpf: number) => Promise<boolean>;
-  registerContact: (cpf: number, type: 'phone' | 'email', contact: string) => Promise<boolean>;
-  confirmContact: (cpf: number, type: 'phone' | 'email', contact: string, token: string) => Promise<boolean>;
+  registerContact: (
+    cpf: number,
+    type: "phone" | "email",
+    contact: string
+  ) => Promise<boolean>;
+  confirmContact: (
+    cpf: number,
+    type: "phone" | "email",
+    contact: string,
+    token: string
+  ) => Promise<boolean>;
   resendSMS: (cpf: number) => Promise<boolean>;
 }
 
@@ -24,7 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -45,28 +54,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       try {
         const storedToken = apiClient.getStoredToken();
-        
+
         if (!storedToken) {
           const credentials = {
             usuario: "mixd",
-            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137"
+            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
-          console.log('Token inicial gerado com sucesso');
+          console.log("Token inicial gerado com sucesso");
         }
       } catch (error) {
-        console.error('Error initializing token:', error);
+        console.error("Error initializing token:", error);
         try {
           const credentials = {
             usuario: "mixd",
-            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137"
+            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
-          console.log('Token de fallback gerado com sucesso');
+          console.log("Token de fallback gerado com sucesso");
         } catch (tokenError) {
-          console.error('Failed to generate token:', tokenError);
+          console.error("Failed to generate token:", tokenError);
           toast({
             title: "Erro de conexão",
             description: "Não foi possível conectar com o servidor.",
@@ -81,14 +90,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  const verificaCPF = async (cpf: number): Promise<CPFVerificationResponse | null> => {
+  const verificaCPF = async (
+    cpf: number
+  ): Promise<CPFVerificationResponse | null> => {
     try {
       setIsLoading(true);
-      
+
       const response = await authService.verificaCPF({ cpf });
       return response;
     } catch (error) {
-      console.error('Error verifying CPF:', error);
+      console.error("Error verifying CPF:", error);
       toast({
         title: "Erro",
         description: "Erro ao verificar CPF. Tente novamente.",
@@ -114,15 +125,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (authResponse.sucesso) {
         // Depois busca os perfis da conta
-        const profilesResponse = await authService.getAccountProfiles({ cpf, senha });
+        const profilesResponse = await authService.getAccountProfiles({
+          cpf,
+          senha,
+        });
         if (profilesResponse.sucesso && profilesResponse.dados) {
           const userData: User = {
             id: cpf.toString(),
-            nome: profilesResponse.dados.nome || profilesResponse.dados.dados?.nome || 'Usuário',
+            nome:
+              profilesResponse.dados.nome ||
+              profilesResponse.dados.dados?.nome ||
+              "Usuário",
             cpf,
-            email: profilesResponse.dados.email || profilesResponse.dados.dados?.email || '',
-            celular: profilesResponse.dados.celular || profilesResponse.dados.dados?.celular || '',
-            perfilAutenticado: profilesResponse.dados.perfilAutenticado || profilesResponse.dados.dados?.perfilAutenticado,
+            email:
+              profilesResponse.dados.email ||
+              profilesResponse.dados.dados?.email ||
+              "",
+            celular:
+              profilesResponse.dados.celular ||
+              profilesResponse.dados.dados?.celular ||
+              "",
+            perfilAutenticado:
+              profilesResponse.dados.perfilAutenticado ||
+              profilesResponse.dados.dados?.perfilAutenticado,
           };
           setUser(userData);
           toast({
@@ -139,7 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -169,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -184,7 +209,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const createAccount = async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.createAccount({ cpf });
-      
+
       if (response.sucesso) {
         toast({
           title: "Conta criada com sucesso",
@@ -200,7 +225,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     } catch (error) {
-      console.error('Create account error:', error);
+      console.error("Create account error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -210,32 +235,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const registerContact = async (cpf: number, type: 'phone' | 'email', contact: string): Promise<boolean> => {
+  const registerContact = async (
+    cpf: number,
+    type: "phone" | "email",
+    contact: string
+  ): Promise<boolean> => {
     try {
       let response;
-      
-      if (type === 'phone') {
-        response = await registerService.registerPhone({ cpf, celular: parseInt(contact) });
+
+      if (type === "phone") {
+        response = await registerService.registerPhone({
+          cpf,
+          celular: parseInt(contact),
+        });
       } else {
         response = await registerService.registerEmail({ cpf, email: contact });
       }
-      
+
       if (response.sucesso) {
         toast({
           title: "Código de verificação enviado",
-          description: `Código de verificação enviado para seu ${type === 'phone' ? 'celular' : 'e-mail'}.`,
+          description: `Código de verificação enviado para seu ${
+            type === "phone" ? "celular" : "e-mail"
+          }.`,
         });
         return true;
       }
 
       toast({
         title: "Erro ao enviar código",
-        description: response.erro || `Erro ao enviar código para ${type === 'phone' ? 'celular' : 'e-mail'}.`,
+        description:
+          response.erro ||
+          `Erro ao enviar código para ${
+            type === "phone" ? "celular" : "e-mail"
+          }.`,
         variant: "destructive",
       });
       return false;
     } catch (error) {
-      console.error('Register contact error:', error);
+      console.error("Register contact error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -245,20 +283,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const confirmContact = async (cpf: number, type: 'phone' | 'email', contact: string, token: string): Promise<boolean> => {
+  const confirmContact = async (
+    cpf: number,
+    type: "phone" | "email",
+    contact: string,
+    token: string
+  ): Promise<boolean> => {
     try {
       let response;
-      
-      if (type === 'phone') {
-        response = await registerService.confirmPhone({ cpf, celular: parseInt(contact), tokenSMS: token });
+
+      if (type === "phone") {
+        response = await registerService.confirmPhone({
+          cpf,
+          celular: parseInt(contact),
+          tokenSMS: token,
+        });
       } else {
-        response = await registerService.confirmEmail({ cpf, email: contact, tokenEmail: token });
+        response = await registerService.confirmEmail({
+          cpf,
+          email: contact,
+          tokenEmail: token,
+        });
       }
-      
+
       if (response.sucesso) {
         toast({
           title: "Verificação realizada com sucesso",
-          description: `${type === 'phone' ? 'Celular' : 'E-mail'} verificado com sucesso!`,
+          description: `${
+            type === "phone" ? "Celular" : "E-mail"
+          } verificado com sucesso!`,
         });
         return true;
       }
@@ -270,7 +323,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     } catch (error) {
-      console.error('Confirm contact error:', error);
+      console.error("Confirm contact error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -283,7 +336,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resendSMS = async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.resendSMS({ cpf });
-      
+
       if (response.sucesso) {
         toast({
           title: "Código reenviado",
@@ -299,7 +352,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     } catch (error) {
-      console.error('Resend SMS error:', error);
+      console.error("Resend SMS error:", error);
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -332,9 +385,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resendSMS,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

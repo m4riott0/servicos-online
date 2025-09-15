@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = 'https://apiapp2024.bensaude.com.br';
+//const API_BASE_URL = 'https://apiapp2024.bensaude.com.br';
+const API_BASE_URL = 'https://localhost:7041/';
 
 class ApiClient {
   private api: AxiosInstance;

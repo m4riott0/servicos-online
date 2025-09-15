@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import type * as ApiTypes from '../types/api';
-import { mockBeneficiaries } from './mockData';
+
 
 export const sosService = {
   acceptSOSTerms: async (req: ApiTypes.SOSTermAcceptanceRequest) =>
@@ -12,14 +12,6 @@ export const sosService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockBeneficiaries.map(mock => ({
-        codigo: mock.codigo,
-        nome: mock.nome,
-        cpf: mock.cpf,
-        dataNascimento: mock.dataNascimento,
-        plano: mock.plano,
-        status: mock.status
-      }));
     }
   },
 

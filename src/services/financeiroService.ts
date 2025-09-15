@@ -1,6 +1,5 @@
 import { apiClient } from './apiClient';
 import type * as ApiTypes from '../types/api';
-import { mockInstallments, mockCreditCards, mockCoParticipationExtract, mockIRPFExtract } from './mockData';
 
 export const financeiroService = {
   downloadBoleto: async (req: ApiTypes.DownloadBoletoRequest): Promise<Blob> => {
@@ -23,13 +22,6 @@ export const financeiroService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockCreditCards.map(mock => ({
-        id: mock.id,
-        apelido: mock.apelido,
-        numeroMascarado: mock.numeroMascarado,
-        bandeira: mock.bandeira,
-        titular: mock.titular
-      }));
     }
   },
 
@@ -45,12 +37,6 @@ export const financeiroService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockCoParticipationExtract.map(mock => ({
-        periodo: mock.periodo,
-        valor: mock.valor,
-        tipo: mock.tipo,
-        descricao: mock.descricao
-      }));
     }
   },
 
@@ -60,12 +46,6 @@ export const financeiroService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockIRPFExtract.map(mock => ({
-        periodo: mock.periodo,
-        valor: mock.valor,
-        tipo: mock.tipo,
-        descricao: mock.descricao
-      }));
     }
   },
 
@@ -78,13 +58,6 @@ export const financeiroService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockInstallments.map(mock => ({
-        codigo: mock.codigo,
-        vencimento: mock.vencimento,
-        valor: mock.valor,
-        status: mock.status,
-        codigoBarras: mock.codigoBarras
-      }));
     }
   },
 };

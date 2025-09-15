@@ -1,7 +1,5 @@
 import { apiClient } from './apiClient';
 import type * as ApiTypes from '../types/api';
-import { mockMedicalCities, mockMedicalSpecialties, mockMedicalProviders } from './mockData';
-
 export const medicalService = {
   getMedicalCities: async (): Promise<ApiTypes.MedicalGuideCity[]> => {
     try {
@@ -9,7 +7,6 @@ export const medicalService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockMedicalCities;
     }
   },
 
@@ -19,7 +16,6 @@ export const medicalService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockMedicalSpecialties;
     }
   },
 
@@ -29,14 +25,6 @@ export const medicalService = {
       return response.data?.dados || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
-      return mockMedicalProviders.map(mock => ({
-        id: mock.id,
-        nome: mock.nome,
-        especialidade: mock.especialidade,
-        cidade: mock.cidade,
-        endereco: mock.endereco,
-        telefone: mock.telefone
-      }));
     }
   },
 
