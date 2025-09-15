@@ -1,57 +1,97 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { User, CheckCircle, Lock } from 'lucide-react';
-import { recoveryService } from '../services/recoveryService';
-import { useToast } from '../hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { CheckCircle, Lock } from "lucide-react";
+import { recoveryService } from "../services/recoveryService";
+import { useToast } from "../hooks/use-toast";
+import Logo from "../assets/bensaude.png";
 
-type Step = 'cpf' | 'token' | 'password' | 'success';
+type TipoSolicitacao = "email" | "celular";
+type Step = "token" | "password" | "success";
+
+const getSessionData = () => {
+  const cpf = localStorage.getItem("cpf") || "";
+  const email = localStorage.getItem("email") || "";
+  const celular = localStorage.getItem("celular") || "";
+  return { cpf, email, celular };
+};
+
+// Helpers para mascarar
+function maskEmail(email: string): string {
+  if (!email) return "";
+  const [user, domain] = email.split("@");
+  return user.substring(0, 3) + "****@" + domain;
+}
+
+function maskCelular(celular: string): string {
+  if (!celular) return "";
+  return celular.length >= 11
+    ? celular.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")
+    : celular;
+}
 
 export const PasswordRecovery: React.FC = () => {
-  const [step, setStep] = useState<Step>('cpf');
-  const [cpf, setCpf] = useState('');
-  const [token, setToken] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmSenha, setConfirmSenha] = useState('');
+  const { cpf, email, celular } = getSessionData();
+  const [token, setToken] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmSenha, setConfirmSenha] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [step, setStep] = useState<Step>("token");
+  const [tipoSolicitacao, setTipoSolicitacao] =
+    useState<TipoSolicitacao>("celular");
+  const [canResend, setCanResend] = useState(true);
+
   const { toast } = useToast();
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  };
+  // --- Timer de reenvio ---
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!canResend) {
+      timer = setTimeout(() => setCanResend(true), 2 * 60 * 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [canResend]);
 
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCPF(e.target.value);
-    setCpf(formatted);
-  };
+  const startResendTimer = () => setCanResend(false);
 
+  const cpfNumerico = cpf ? parseInt(cpf.replace(/\D/g, ""), 10) : 0;
+  const celularNumerico =
+    celular && tipoSolicitacao === "celular"
+      ? parseInt(celular.replace(/\D/g, ""), 10)
+      : 0;
+
+  // --- Requisição do código ---
   const handleRequestToken = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cpfNumbers = cpf.replace(/\D/g, '');
-    
     setIsSubmitting(true);
     try {
       await recoveryService.recoverPassword({
-        cpf: parseInt(cpfNumbers),
-        tipoSolicitacao: 'sms',
-        celular: 0 // Would be obtained from CPF verification
+        cpf: cpfNumerico,
+        tipoSolicitacao,
+        celular: celularNumerico,
       });
-      
-      setStep('token');
       toast({
         title: "Código de recuperação enviado",
-        description: "Código de recuperação enviado para seu celular!",
+        description: `Código enviado para seu ${
+          tipoSolicitacao === "email" ? "email" : "celular"
+        }!`,
       });
-    } catch (error) {
+      startResendTimer();
+    } catch (error: any) {
       toast({
         title: "Erro ao enviar código",
-        description: "Erro ao enviar token. Tente novamente.",
+        description:
+          error?.response?.data?.message ?? "Erro ao enviar token. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -59,27 +99,26 @@ export const PasswordRecovery: React.FC = () => {
     }
   };
 
+  // --- Validação do token ---
   const handleValidateToken = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cpfNumbers = cpf.replace(/\D/g, '');
-    
     setIsSubmitting(true);
     try {
       await recoveryService.validateRecoveryToken({
-        cpf: parseInt(cpfNumbers),
-        tipoSolicitacao: 'sms',
-        token
+        cpf: cpfNumerico,
+        token,
+        tipoSolicitacao,
       });
-      
-      setStep('password');
+      setStep("password");
       toast({
         title: "Código validado com sucesso",
         description: "Agora você pode definir uma nova senha.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Código inválido",
-        description: "Token inválido. Tente novamente.",
+        description:
+          error?.response?.data?.message ?? "Token inválido. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -87,9 +126,9 @@ export const PasswordRecovery: React.FC = () => {
     }
   };
 
+  // --- Alteração da senha ---
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (senha !== confirmSenha) {
       toast({
         title: "Senhas não coincidem",
@@ -98,28 +137,25 @@ export const PasswordRecovery: React.FC = () => {
       });
       return;
     }
-
-    const cpfNumbers = cpf.replace(/\D/g, '');
     setIsSubmitting(true);
-    
     try {
       await recoveryService.changePassword({
-        cpf: parseInt(cpfNumbers),
-        tipoSolicitacao: 'sms',
+        cpf: cpfNumerico,
         token,
         senha,
-        confirmacaoSenha: confirmSenha
+        confirmacaoSenha: confirmSenha,
+        tipoSolicitacao,
       });
-      
-      setStep('success');
+      setStep("success");
       toast({
         title: "Senha alterada com sucesso",
         description: "Sua senha foi alterada com sucesso!",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Erro ao alterar senha",
-        description: "Erro ao alterar senha. Tente novamente.",
+        description:
+          error?.response?.data?.message ?? "Erro ao alterar senha. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -130,57 +166,166 @@ export const PasswordRecovery: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-section-hero p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-center items-center mb-8">
+          <img src={Logo} className="mb-4" alt="Logo da Bensaúde" />
+        </div>
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mb-4 shadow-medical">
-            <span className="text-primary-foreground font-bold text-2xl">B</span>
-          </div>
-          <h1 className="text-3xl font-bold gradient-text-medical mb-2">Recuperar Senha</h1>
+          <h1 className="text-3xl font-bold text-blue-500 mb-2">
+            Recuperar Senha
+          </h1>
           <p className="text-muted-foreground">Redefina sua senha de acesso</p>
         </div>
 
         <Card className="card-medical">
-          {step === 'cpf' && (
+          {/* STEP 1 - Escolha do método e token */}
+          {step === "token" && (
             <>
               <CardHeader className="text-center">
-                <CardTitle>Digite seu CPF</CardTitle>
+                <CardTitle>Escolha como receber o código</CardTitle>
                 <CardDescription>
-                  Enviaremos um código para seu celular cadastrado
+                  Enviaremos um código para seu e-mail ou celular cadastrado
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleRequestToken} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <Input
-                        id="cpf"
-                        type="text"
-                        placeholder="000.000.000-00"
-                        value={cpf}
-                        onChange={handleCPFChange}
-                        maxLength={14}
-                        className="input-medical pl-10"
-                        required
-                      />
+                    <Label>Selecione o método</Label>
+                    <div className="flex flex-col gap-2">
+                      <label className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="tipoSolicitacao"
+                          value="email"
+                          checked={tipoSolicitacao === "email"}
+                          onChange={() => setTipoSolicitacao("email")}
+                        />
+                        <span>
+                          {email
+                            ? `E-mail: ${maskEmail(email)}`
+                            : "E-mail não disponível"}
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="tipoSolicitacao"
+                          value="celular"
+                          checked={tipoSolicitacao === "celular"}
+                          onChange={() => setTipoSolicitacao("celular")}
+                        />
+                        <span>
+                          {celular
+                            ? `Celular: ${maskCelular(celular)}`
+                            : "Celular não disponível"}
+                        </span>
+                      </label>
                     </div>
                   </div>
-                  <Button type="submit" variant="medical" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? <LoadingSpinner size="sm" className="mr-2" /> : null}
+
+                  <Button
+                    type="submit"
+                    variant="medical"
+                    className="w-full"
+                    disabled={isSubmitting || !canResend}
+                  >
+                    {isSubmitting && (
+                      <LoadingSpinner size="sm" className="mr-2" />
+                    )}
                     Enviar Código
+                  </Button>
+
+                  {!canResend && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Aguarde 2 minutos para reenviar o código.
+                    </p>
+                  )}
+                </form>
+
+                <form onSubmit={handleValidateToken} className="space-y-6 mt-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="token">Código recebido</Label>
+                    <Input
+                      id="token"
+                      type="text"
+                      placeholder="Digite o código"
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="medical"
+                    className="w-full"
+                    disabled={isSubmitting || !token}
+                  >
+                    Validar Código
                   </Button>
                 </form>
               </CardContent>
             </>
           )}
 
-          {step === 'success' && (
+          {/* STEP 2 - Alterar senha */}
+          {step === "password" && (
+            <>
+              <CardHeader className="text-center">
+                <Lock className="h-16 w-16 text-primary mx-auto mb-4" />
+                <CardTitle>Defina uma nova senha</CardTitle>
+                <CardDescription>
+                  Digite e confirme sua nova senha de acesso.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleChangePassword} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="senha">Nova senha</Label>
+                    <Input
+                      id="senha"
+                      type="password"
+                      placeholder="Digite sua nova senha"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmSenha">Confirme a senha</Label>
+                    <Input
+                      id="confirmSenha"
+                      type="password"
+                      placeholder="Confirme sua nova senha"
+                      value={confirmSenha}
+                      onChange={(e) => setConfirmSenha(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="medical"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting && (
+                      <LoadingSpinner size="sm" className="mr-2" />
+                    )}
+                    Alterar Senha
+                  </Button>
+                </form>
+              </CardContent>
+            </>
+          )}
+
+          {/* STEP 3 - Sucesso */}
+          {step === "success" && (
             <>
               <CardHeader className="text-center">
                 <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
                 <CardTitle className="text-success">Senha Alterada!</CardTitle>
                 <CardDescription>
-                  Sua senha foi alterada com sucesso. Agora você pode fazer login.
+                  Sua senha foi alterada com sucesso. Agora você pode fazer
+                  login.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -193,9 +338,13 @@ export const PasswordRecovery: React.FC = () => {
             </>
           )}
 
+          {/* Link de voltar */}
           <CardContent className="pt-0">
             <div className="text-center">
-              <Link to="/login" className="text-sm text-primary hover:text-primary-hover transition-colors">
+              <Link
+                to="/login"
+                className="text-sm text-primary hover:text-primary-hover transition-colors"
+              >
                 Voltar para o login
               </Link>
             </div>

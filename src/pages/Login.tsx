@@ -1,26 +1,34 @@
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { User } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
-import { AuthLogin } from './AuthLogin';
-import { AuthRegister } from './AuthRegister';
-import type { CPFVerificationResponse } from '../types/api';
-import LoginHero from '../assets/login-hero.png';
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { User } from "lucide-react";
+import { useToast } from "../hooks/use-toast";
+import { AuthLogin } from "./AuthLogin";
+import { AuthRegister } from "./AuthRegister";
+import type { CPFVerificationResponse } from "../types/api";
+import LoginHero from "../assets/login-hero.png";
 
-type LoginStep = 'cpf' | 'login' | 'register';
+type LoginStep = "cpf" | "login" | "register";
 
 export const Login: React.FC = () => {
-  const [step, setStep] = useState<LoginStep>('cpf');
-  const [cpf, setCpf] = useState('');
-  const [userInfo, setUserInfo] = useState<CPFVerificationResponse | null>(null);
+  const [step, setStep] = useState<LoginStep>("cpf");
+  const [cpf, setCpf] = useState("");
+  const [userInfo, setUserInfo] = useState<CPFVerificationResponse | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { verificaCPF, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -29,8 +37,8 @@ export const Login: React.FC = () => {
   }
 
   const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    const numbers = value.replace(/\D/g, "");
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   };
 
   const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +48,7 @@ export const Login: React.FC = () => {
 
   const handleCPFSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!cpf) {
       toast({
         title: "Campo obrigatório",
@@ -50,7 +58,7 @@ export const Login: React.FC = () => {
       return;
     }
 
-    const cpfNumbers = cpf.replace(/\D/g, '');
+    const cpfNumbers = cpf.replace(/\D/g, "");
     if (cpfNumbers.length !== 11) {
       toast({
         title: "CPF inválido",
@@ -61,26 +69,45 @@ export const Login: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      console.log('Submitting CPF:', cpfNumbers);
+      console.log("Submitting CPF:", cpfNumbers);
       const response = await verificaCPF(parseInt(cpfNumbers));
-      console.log('CPF verification response:', response);
-      
+      console.log("CPF verification response:", response);
+
       if (response) {
         setUserInfo(response);
-        
+
         // Lógica de decisão baseada na resposta da API
-        if (response.sucesso && response.temContaNoApp && response.temSenhaCadastrada) {
-          setStep('login');
+        if (
+          response.sucesso &&
+          response.temContaNoApp &&
+          response.temSenhaCadastrada
+        ) {
+          setStep("login");
         } else if (response.sucesso) {
-          setStep('register');
+          setStep("register");
         } else {
           toast({
             title: "CPF não encontrado",
             description: response.erro || "CPF não cadastrado no sistema.",
             variant: "destructive",
           });
+        }
+
+        if (response && response.sucesso) {
+          setUserInfo(response);
+
+          localStorage.setItem("cpf", cpfNumbers);
+          if (response.email) localStorage.setItem("email", response.email);
+          if (response.celular)
+            localStorage.setItem("celular", response.celular);
+
+          if (response.temContaNoApp && response.temSenhaCadastrada) {
+            setStep("login");
+          } else {
+            setStep("register");
+          }
         }
       } else {
         toast({
@@ -90,10 +117,11 @@ export const Login: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error verifying CPF:', error);
+      console.error("Error verifying CPF:", error);
       toast({
         title: "Erro de conexão",
-        description: "Não foi possível conectar com o servidor. Tente novamente.",
+        description:
+          "Não foi possível conectar com o servidor. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -102,11 +130,10 @@ export const Login: React.FC = () => {
   };
 
   const handleBack = () => {
-    setStep('cpf');
+    setStep("cpf");
     setUserInfo(null);
   };
 
-  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-section-hero">
@@ -116,32 +143,32 @@ export const Login: React.FC = () => {
   }
 
   // Render login step
-  if (step === 'login' && userInfo) {
+  if (step === "login" && userInfo) {
     return (
-      <AuthLogin 
-        cpf={cpf} 
+      <AuthLogin
+        cpf={cpf}
         userInfo={{
-          nome: userInfo.nome || 'Usuário',
+          nome: userInfo.nome || "Usuário",
           celular: userInfo.celular,
-          email: userInfo.email
-        }} 
-        onBack={handleBack} 
+          email: userInfo.email,
+        }}
+        onBack={handleBack}
       />
     );
   }
 
-  if (step === 'register' && userInfo) {
+  if (step === "register" && userInfo) {
     return (
-      <AuthRegister 
-        cpf={cpf} 
+      <AuthRegister
+        cpf={cpf}
         userInfo={{
-          nome: userInfo.nome || 'Usuário',
+          nome: userInfo.nome || "Usuário",
           celular: userInfo.celular,
           email: userInfo.email,
           temContaNoApp: userInfo.temContaNoApp || false,
-          temSenhaCadastrada: userInfo.temSenhaCadastrada || false
-        }} 
-        onBack={handleBack} 
+          temSenhaCadastrada: userInfo.temSenhaCadastrada || false,
+        }}
+        onBack={handleBack}
       />
     );
   }
@@ -163,7 +190,9 @@ export const Login: React.FC = () => {
           {/* Header */}
           <div className="text-center">
             <div className="flex flex-col items-center mb-6 space-y-4 ">
-              <h1 className="text-3xl font-bold text-blue-500 mb-2">Portal do Beneficiário</h1>
+              <h1 className="text-3xl font-bold text-blue-500 mb-2">
+                Portal do Beneficiário
+              </h1>
             </div>
           </div>
 
@@ -171,9 +200,7 @@ export const Login: React.FC = () => {
           <Card className="card-medical">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Acesse sua conta</CardTitle>
-              <CardDescription>
-                Digite seu CPF para começar
-              </CardDescription>
+              <CardDescription>Digite seu CPF para começar</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCPFSubmit} className="space-y-6">
@@ -210,7 +237,7 @@ export const Login: React.FC = () => {
                       Verificando...
                     </>
                   ) : (
-                    'Continuar'
+                    "Continuar"
                   )}
                 </Button>
               </form>
