@@ -59,7 +59,7 @@ export const Register: React.FC = () => {
       toast({
         title: "CPF inválido",
         description: "Por favor, digite um CPF válido.",
-        variant: "destructive",
+        variant: "destructive", 
       });
       return;
     }

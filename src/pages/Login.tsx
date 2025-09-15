@@ -78,7 +78,6 @@ export const Login: React.FC = () => {
       if (response) {
         setUserInfo(response);
 
-        // Lógica de decisão baseada na resposta da API
         if (
           response.sucesso &&
           response.temContaNoApp &&

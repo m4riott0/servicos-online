@@ -58,7 +58,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!storedToken) {
           const credentials = {
             usuario: "mixd",
-            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
+            senha:
+              "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
@@ -69,7 +70,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           const credentials = {
             usuario: "mixd",
-            senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
+            senha:
+              "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
@@ -112,71 +114,126 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (cpf: number, senha: string): Promise<boolean> => {
+    const cpfString = cpf.toString().replace(/\D/g, "");
+
     try {
       setIsLoading(true);
 
-      // Primeiro busca os perfis da conta
       const profilesResponse = await authService.getAccountProfiles({
         cpf,
         senha,
       });
+      console.log("Resposta dos perfis da conta:", profilesResponse);
 
-      if (profilesResponse.sucesso && profilesResponse.dados) {
-        // Depois autentica
+      if (Array.isArray(profilesResponse) && profilesResponse.length > 0) {
+        const perfil = profilesResponse[0];
+
         const authResponse = await authService.authenticate({
-          codigoPlano: 0,
-          codigoContrato: 0,
-          cpf,
+          codigoPlano: perfil.codigoPlano,
+          codigoContrato: perfil.codigoContrato,
+          cpf: parseInt(cpfString), 
+          senha,
+        });
+
+        console.log("Payload enviado para autenticação:", {
+          codigoPlano: perfil.codigoPlano,
+          codigoContrato: perfil.codigoContrato,
+          cpf: cpfString,
           senha,
         });
 
         if (authResponse.sucesso) {
           const userData: User = {
             id: cpf.toString(),
-            nome:
-              profilesResponse.dados.nome ||
-              profilesResponse.dados.dados?.nome ||
-              "Usuário",
+            nome: perfil.nome || "Usuário",
             cpf,
-            email:
-              profilesResponse.dados.email ||
-              profilesResponse.dados.dados?.email ||
-              "",
-            celular:
-              profilesResponse.dados.celular ||
-              profilesResponse.dados.dados?.celular ||
-              "",
-            perfilAutenticado:
-              profilesResponse.dados.perfilAutenticado ||
-              profilesResponse.dados.dados?.perfilAutenticado,
+            email: perfil.email || "",
+            celular: perfil.celular || "",
+            perfilAutenticado: perfil.perfilAutenticado || null,
           };
+
           setUser(userData);
+
           toast({
             title: "Sucesso",
             description: `Bem-vindo, ${userData.nome}!`,
           });
+
           return true;
         }
+
         toast({
           title: "Credenciais inválidas",
-          description: authResponse.erro || "Credenciais inválidas.",
+          description: authResponse.erro || "Senha incorreta.",
           variant: "destructive",
         });
         return false;
       }
+
+      if (profilesResponse?.sucesso && profilesResponse?.dados) {
+        const dados = profilesResponse.dados;
+
+        const authResponse = await authService.authenticate({
+          codigoPlano: dados.codigoPlano || 0,
+          codigoContrato: dados.codigoContrato || 0,
+          cpf: parseInt(cpfString),
+          senha,
+        });
+
+        if (authResponse.sucesso) {
+          const userData: User = {
+            id: cpf.toString(),
+            nome: dados.nome || dados?.dados?.nome || "Usuário",
+            cpf,
+            email: dados.email || dados?.dados?.email || "",
+            celular: dados.celular || dados?.dados?.celular || "",
+            perfilAutenticado:
+              dados.perfilAutenticado ||
+              dados?.dados?.perfilAutenticado ||
+              null,
+          };
+
+          setUser(userData);
+
+          toast({
+            title: "Sucesso",
+            description: `Bem-vindo, ${userData.nome}!`,
+          });
+
+          return true;
+        }
+
+        toast({
+          title: "Credenciais inválidas",
+          description: authResponse.erro || "Senha incorreta.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       toast({
         title: "Erro ao buscar perfis",
-        description: profilesResponse.erro || "Erro ao buscar perfis.",
+        description: "Nenhum perfil encontrado para este CPF.",
         variant: "destructive",
       });
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
+
+      if (error.response?.status === 401) {
+        toast({
+          title: "Senha incorreta",
+          description: "Verifique sua senha e tente novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+
       return false;
     } finally {
       setIsLoading(false);

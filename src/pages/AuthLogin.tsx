@@ -17,7 +17,7 @@ interface AuthLoginProps {
     celular?: string;
     email?: string;
   };
-  onBack: () => void;
+  onBack: () => void; 
 }
 
 export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) => {
@@ -46,7 +46,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
 
     setIsSubmitting(true);
     console.log('Attempting login with CPF:', cpf);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
     const success = await login(cpfNumbers, senha);
     console.log('Login result:', success);
     setIsSubmitting(false);
@@ -58,7 +58,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
       <div className="hidden lg:block relative bg-gradient-medical">
         <img
           src={loginHero}
-          alt="Bensaude Saúde - Cuidando da sua saúde"
+          alt="Bensaúde - Cuidando da sua saúde"
           className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
