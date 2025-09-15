@@ -115,21 +115,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
 
-      // Primeiro autentica
-      const authResponse = await authService.authenticate({
-        codigoPlano: 0,
-        codigoContrato: 0,
+      // Primeiro busca os perfis da conta
+      const profilesResponse = await authService.getAccountProfiles({
         cpf,
         senha,
       });
 
-      if (authResponse.sucesso) {
-        // Depois busca os perfis da conta
-        const profilesResponse = await authService.getAccountProfiles({
+      if (profilesResponse.sucesso && profilesResponse.dados) {
+        // Depois autentica
+        const authResponse = await authService.authenticate({
+          codigoPlano: 0,
+          codigoContrato: 0,
           cpf,
           senha,
         });
-        if (profilesResponse.sucesso && profilesResponse.dados) {
+
+        if (authResponse.sucesso) {
           const userData: User = {
             id: cpf.toString(),
             nome:
@@ -156,10 +157,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
           return true;
         }
+        toast({
+          title: "Credenciais inválidas",
+          description: authResponse.erro || "Credenciais inválidas.",
+          variant: "destructive",
+        });
+        return false;
       }
       toast({
-        title: "Credenciais inválidas",
-        description: authResponse.erro || "Credenciais inválidas.",
+        title: "Erro ao buscar perfis",
+        description: profilesResponse.erro || "Erro ao buscar perfis.",
         variant: "destructive",
       });
       return false;

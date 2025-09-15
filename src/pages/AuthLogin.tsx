@@ -68,7 +68,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold gradient-text-medical">Bem-vindo de volta</h1>
+            <h1 className="text-3xl font-bold text-blue-500">Bem-vindo de volta</h1>
             <p className="text-muted-foreground mt-2">
               Olá, <span className="font-semibold">{userInfo.nome.split(' ')[0]}</span>!
             </p>
