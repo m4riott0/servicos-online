@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Eye, EyeOff, Lock, ArrowLeft, CheckCircle, Mail, Phone } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
-import LoginHero from '../assets/login-hero.png';
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  ArrowLeft,
+  CheckCircle,
+  Mail,
+  Phone,
+} from "lucide-react";
+import { useToast } from "../hooks/use-toast";
+import LoginHero from "../assets/login-hero.png";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface AuthRegisterProps {
   cpf: string;
@@ -22,20 +37,33 @@ interface AuthRegisterProps {
   onBack: () => void;
 }
 
-export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBack }) => {
-  const [step, setStep] = useState<'contact' | 'verification' | 'password'>('contact');
-  const [senha, setSenha] = useState('');
-  const [confirmSenha, setConfirmSenha] = useState('');
+export const AuthRegister: React.FC<AuthRegisterProps> = ({
+  cpf,
+  userInfo,
+  onBack,
+}) => {
+  const [step, setStep] = useState<"contact" | "verification" | "password">(
+    "contact"
+  );
+  const [senha, setSenha] = useState("");
+  const [confirmSenha, setConfirmSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [celular, setCelular] = useState(userInfo.celular || '');
-  const [email, setEmail] = useState(userInfo.email || '');
-  const [tokenSMS, setTokenSMS] = useState('');
-  const [tokenEmail, setTokenEmail] = useState('');
+  const [celular, setCelular] = useState(userInfo.celular || "");
+  const [email, setEmail] = useState(userInfo.email || "");
+  const [tokenSMS, setTokenSMS] = useState("");
+  const [tokenEmail, setTokenEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contactRegistered, setContactRegistered] = useState(false);
-  
-  const { register, isAuthenticated, createAccount, registerContact, confirmContact, resendSMS } = useAuth();
+
+  const {
+    register,
+    isAuthenticated,
+    createAccount,
+    registerContact,
+    confirmContact,
+    resendSMS,
+  } = useAuth();
   const { toast } = useToast();
 
   if (isAuthenticated) {
@@ -45,14 +73,14 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
   // Se já tem conta mas não tem senha, pular para senha
   React.useEffect(() => {
     if (userInfo.temContaNoApp && !userInfo.temSenhaCadastrada) {
-      setStep('password');
+      setStep("password");
     }
   }, [userInfo]);
 
   const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    const numbers = value.replace(/\D/g, "");
     if (numbers.length <= 11) {
-      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
     }
     return value;
   };
@@ -64,7 +92,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!celular && !email) {
       toast({
         title: "Dados obrigatórios",
@@ -75,7 +103,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     }
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
 
     try {
       // Se não tem conta no app, criar primeiro
@@ -85,18 +113,18 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
 
       // Registrar contatos
       if (celular) {
-        const phoneNumbers = parseInt(celular.replace(/\D/g, ''));
-        await registerContact(cpfNumbers, 'phone', phoneNumbers.toString());
+        const phoneNumbers = parseInt(celular.replace(/\D/g, ""));
+        await registerContact(cpfNumbers, "phone", phoneNumbers.toString());
       }
-      
+
       if (email) {
-        await registerContact(cpfNumbers, 'email', email);
+        await registerContact(cpfNumbers, "email", email);
       }
 
       setContactRegistered(true);
-      setStep('verification');
+      setStep("verification");
     } catch (error) {
-      console.error('Error registering contact:', error);
+      console.error("Error registering contact:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +132,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!tokenSMS && !tokenEmail) {
       toast({
         title: "Token obrigatório",
@@ -115,21 +143,26 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     }
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
 
     try {
       if (tokenSMS && celular) {
-        const phoneNumbers = parseInt(celular.replace(/\D/g, ''));
-        await confirmContact(cpfNumbers, 'phone', phoneNumbers.toString(), tokenSMS);
-      }
-      
-      if (tokenEmail && email) {
-        await confirmContact(cpfNumbers, 'email', email, tokenEmail);
+        const phoneNumbers = parseInt(celular.replace(/\D/g, ""));
+        await confirmContact(
+          cpfNumbers,
+          "phone",
+          phoneNumbers.toString(),
+          tokenSMS
+        );
       }
 
-      setStep('password');
+      if (tokenEmail && email) {
+        await confirmContact(cpfNumbers, "email", email, tokenEmail);
+      }
+
+      setStep("password");
     } catch (error) {
-      console.error('Error confirming contact:', error);
+      console.error("Error confirming contact:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +170,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!senha) {
       toast({
         title: "Campo obrigatório",
@@ -166,62 +199,66 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     }
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
     const success = await register(cpfNumbers, senha);
     setIsSubmitting(false);
   };
 
   const handleResendSMS = async () => {
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
     await resendSMS(cpfNumbers);
   };
 
   const renderContactForm = () => (
     <Card className="card-medical">
       <CardHeader>
-        <CardTitle className="text-center">Dados de Contato</CardTitle>
+        <CardTitle className="text-center">
+          Enviar token
+        </CardTitle>
         <CardDescription className="text-center">
-          Informe seus dados para confirmar a identidade
+          Selecione o contato para enviar o token
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleContactSubmit} className="space-y-6">
-          {/* Phone Field */}
-          <div className="space-y-2">
-            <Label htmlFor="celular" className="text-sm font-medium">
-              Celular
-            </Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                id="celular"
-                type="text"
-                placeholder="(00) 00000-0000"
-                value={celular}
-                onChange={handlePhoneChange}
-                maxLength={15}
-                className="input-medical pl-10"
-              />
-            </div>
-          </div>
 
-          {/* Email Field */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">
-              E-mail
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-medical pl-10"
-              />
+          <RadioGroup
+            value={celular || email}
+            onValueChange={celular ? setCelular : setEmail}
+            className="space-y-4"
+          >
+            {/* Celular */}
+            <div className="space-y-2">
+              <Label htmlFor="radio-celular" className="text-sm font-medium">
+                Celular
+              </Label>
+              <div className="relative">
+                <RadioGroupItem
+                  value={userInfo.celular}
+                  id="radio-celular"
+                  className="peer"
+                >
+                  {celular || "Não informado"}
+                </RadioGroupItem>
+              </div>
             </div>
-          </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="radio-email" className="text-sm font-medium">
+                E-mail
+              </Label>
+              <div className="relative">
+                <RadioGroupItem
+                  value={userInfo.email}
+                  id="radio-email"
+                  className="peer"
+                >
+                  {email || "Não informado"}
+                </RadioGroupItem>
+              </div>
+            </div>
+          </RadioGroup>
 
           <Button
             type="submit"
@@ -235,7 +272,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Processando...
               </>
             ) : (
-              'Continuar'
+              "Continuar"
             )}
           </Button>
         </form>
@@ -246,7 +283,9 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
   const renderVerificationForm = () => (
     <Card className="card-medical">
       <CardHeader>
-        <CardTitle className="text-center">Verificação</CardTitle>
+        <p className="text-center text-blue-500 font-bold text-2xl mb-4">
+          Olá. {userInfo.nome}
+        </p>
         <CardDescription className="text-center">
           Digite os códigos enviados para seus contatos
         </CardDescription>
@@ -308,7 +347,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Verificando...
               </>
             ) : (
-              'Verificar'
+              "Verificar"
             )}
           </Button>
         </form>
@@ -319,7 +358,9 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
   const renderPasswordForm = () => (
     <Card className="card-medical">
       <CardHeader>
-        <CardTitle className="text-center ">Olá {userInfo.nome}</CardTitle>
+        <p className="text-center text-blue-500 font-bold text-2xl mb-4">
+          Olá. {userInfo.nome}
+        </p>
         <CardDescription className="text-center">
           Defina uma senha para acessar sua conta
         </CardDescription>
@@ -335,7 +376,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 id="senha"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Digite uma senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -347,7 +388,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -361,7 +406,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 id="confirmSenha"
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Digite a senha novamente"
                 value={confirmSenha}
                 onChange={(e) => setConfirmSenha(e.target.value)}
@@ -373,7 +418,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -390,7 +439,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Criando conta...
               </>
             ) : (
-              'Criar Conta'
+              "Criar Conta"
             )}
           </Button>
         </form>
@@ -415,32 +464,60 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
           {/* Header */}
           <div className="text-center">
             <h1 className="text-3xl font-bold text-blue-500">
-              {step === 'password' ? 'Criar Senha' : 'Cadastro'}
+              {step === "password" ? "Criar Senha" : "Cadastro"}
             </h1>
           </div>
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step === 'contact' ? 'text-primary' : contactRegistered ? 'text-blue-500' : 'text-muted-foreground'}`}>
-              {contactRegistered ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
+            <div
+              className={`flex items-center ${
+                step === "contact"
+                  ? "text-primary"
+                  : contactRegistered
+                  ? "text-blue-500"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {contactRegistered ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <div className="w-5 h-5 border-2 rounded-full" />
+              )}
               <span className="ml-2 text-sm">Contato</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
-            <div className={`flex items-center ${step === 'verification' ? 'text-primary' : step === 'password' ? 'text-blue-500' : 'text-muted-foreground'}`}>
-              {step === 'password' ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
+            <div
+              className={`flex items-center ${
+                step === "verification"
+                  ? "text-primary"
+                  : step === "password"
+                  ? "text-blue-500"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {step === "password" ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <div className="w-5 h-5 border-2 rounded-full" />
+              )}
               <span className="ml-2 text-sm">Verificação</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
-            <div className={`flex items-center ${step === 'password' ? 'text-primary' : 'text-muted-foreground'}`}>
+            <div
+              className={`flex items-center ${
+                step === "password" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
               <div className="w-5 h-5 border-2 rounded-full" />
               <span className="ml-2 text-sm">Senha</span>
             </div>
           </div>
 
           {/* Form Content */}
-          {step === 'contact' && renderContactForm()}
-          {step === 'verification' && renderVerificationForm()}
-          {step === 'password' && renderPasswordForm()}
+          {step === "contact" && renderContactForm()}
+          {step === "verification" && renderVerificationForm()}
+          {step === "password" && renderPasswordForm()}
 
           {/* Back Button */}
           <div className="text-center">
