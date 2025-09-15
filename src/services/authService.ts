@@ -5,10 +5,10 @@ export const authService = {
   async generateToken(credentials: ApiTypes.GenerateTokenRequest): Promise<string> {
     try {
       const res = await apiClient.instance.post<string>('/api/Token/GerarToken', credentials);
-      console.log('Token generated successfully');
+      console.log('Token gerado com sucesso');
       return res.data;
     } catch (error) {
-      console.error('Error generating token:', error);
+      console.error('Erro ao gerar token:', error);
       throw error;
     }
   },
@@ -16,10 +16,10 @@ export const authService = {
   async verificaCPF(request: ApiTypes.CPFVerificationRequest): Promise<ApiTypes.CPFVerificationResponse> {
     try {
       const res = await apiClient.instance.post<ApiTypes.CPFVerificationResponse>('/api/Login/VerificarCPF', request);
-      console.log('CPF verification response:', res.data);
+      console.log('Resposta da verificação de CPF:', res.data);
       return res.data;
     } catch (error) {
-      console.error('Error verifying CPF:', error);
+      console.error('Erro ao verificar CPF:', error);
       throw error;
     }
   },
@@ -27,10 +27,10 @@ export const authService = {
   async getAccountProfiles(request: ApiTypes.AccountProfilesRequest): Promise<ApiTypes.ApiResponse> {
     try {
       const res = await apiClient.instance.post<ApiTypes.ApiResponse>('/api/Login/PerfisDaConta', request);
-      console.log('Account profiles response:', res.data);
+      console.log('Resposta dos perfis da conta:', res.data);
       return res.data;
     } catch (error) {
-      console.error('Error getting account profiles:', error);
+      console.error('Erro ao buscar perfis da conta:', error);
       throw error;
     }
   },
@@ -38,10 +38,10 @@ export const authService = {
   async authenticate(request: ApiTypes.AuthenticationRequest): Promise<ApiTypes.ApiResponse> {
     try {
       const res = await apiClient.instance.post<ApiTypes.ApiResponse>('/api/Login/Autenticar', request);
-      console.log('Authentication response:', res.data);
+      console.log('Resposta da autenticação:', res.data);
       return res.data;
     } catch (error) {
-      console.error('Error authenticating:', error);
+      console.error('Erro na autenticação:', error);
       throw error;
     }
   },

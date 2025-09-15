@@ -70,7 +70,7 @@ export const Login: React.FC = () => {
       if (response) {
         setUserInfo(response);
         
-        // Decidir próximo passo baseado na resposta
+        // Lógica de decisão baseada na resposta da API
         if (response.sucesso && response.temContaNoApp && response.temSenhaCadastrada) {
           setStep('login');
         } else if (response.sucesso) {

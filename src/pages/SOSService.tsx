@@ -53,7 +53,7 @@ export const SOSService: React.FC = () => {
     } catch (error) {
       console.error('Error loading SOS beneficiaries:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar beneficiários",
         description: "Erro ao carregar beneficiários. Tente novamente.",
         variant: "destructive",
       });
@@ -82,13 +82,13 @@ export const SOSService: React.FC = () => {
       
       setStep('sms');
       toast({
-        title: "Termos aceitos",
+        title: "Termos aceitos com sucesso",
         description: "Termos de adesão aceitos com sucesso!",
       });
     } catch (error) {
       console.error('Error accepting SOS terms:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao aceitar termos",
         description: "Erro ao aceitar termos. Tente novamente.",
         variant: "destructive",
       });
@@ -109,13 +109,13 @@ export const SOSService: React.FC = () => {
       
       setStep('confirm');
       toast({
-        title: "SMS enviado",
+        title: "Código enviado",
         description: "Código de confirmação enviado por SMS!",
       });
     } catch (error) {
       console.error('Error sending SOS SMS:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao enviar SMS",
         description: "Erro ao enviar SMS. Tente novamente.",
         variant: "destructive",
       });
@@ -136,13 +136,13 @@ export const SOSService: React.FC = () => {
       
       setStep('success');
       toast({
-        title: "Sucesso",
+        title: "Serviço SOS ativado",
         description: "Serviço SOS contratado com sucesso!",
       });
     } catch (error) {
       console.error('Error confirming SOS contract:', error);
       toast({
-        title: "Erro",
+        title: "Erro na confirmação",
         description: "Erro ao confirmar contratação. Verifique o código.",
         variant: "destructive",
       });

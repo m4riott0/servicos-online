@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-//const API_BASE_URL = 'https://apiapp2024.bensaude.com.br';
-const API_BASE_URL = 'https://localhost:7041/';
+const API_BASE_URL = 'https://apiapp2024.bensaude.com.br';
 
 class ApiClient {
   private api: AxiosInstance;
@@ -22,7 +21,7 @@ class ApiClient {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
-        console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
+        console.log('Requisição API:', config.method?.toUpperCase(), config.url);
         return config;
       },
       (error) => Promise.reject(error)
@@ -31,7 +30,7 @@ class ApiClient {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('API Error:', {
+        console.error('Erro da API:', {
           url: error.config?.url,
           method: error.config?.method,
           status: error.response?.status,
@@ -39,9 +38,9 @@ class ApiClient {
           message: error.message
         });
         
-        // Don't clear token on 401, just log it
+        // Não limpa o token em caso de 401, apenas registra o erro
         if (error.response?.status === 401) {
-          console.warn('Unauthorized request, but keeping token');
+          console.warn('Requisição não autorizada, mas mantendo o token');
         }
         return Promise.reject(error);
       }
@@ -51,20 +50,20 @@ class ApiClient {
   setToken(token: string) {
     this.token = token;
     localStorage.setItem('bensaude_token', token);
-    console.log('Token set:', token.substring(0, 20) + '...');
+    console.log('Token definido:', token.substring(0, 20) + '...');
   }
 
   clearToken() {
     this.token = null;
     localStorage.removeItem('bensaude_token');
-    console.log('Token cleared');
+    console.log('Token removido');
   }
 
   getStoredToken() {
     const stored = localStorage.getItem('bensaude_token');
     if (stored) {
       this.token = stored;
-      console.log('Token loaded from storage:', stored.substring(0, 20) + '...');
+      console.log('Token carregado do armazenamento:', stored.substring(0, 20) + '...');
     }
     return this.token;
   }

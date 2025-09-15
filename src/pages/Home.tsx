@@ -110,7 +110,7 @@ export const Home: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Bem-vindo, {user?.nome?.split(' ')[0]}!
+              Olá, {user?.nome?.split(' ')[0]}!
             </h1>
             <p className="text-muted-foreground text-lg">
               Gerencie seus benefícios de saúde com facilidade

@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Eye, EyeOff, Lock, User, ArrowLeft } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import LoginHero from '../assets/login-hero.png';
+import loginHero from '../assets/login-hero.png';
 
 interface AuthLoginProps {
   cpf: string;
@@ -55,11 +55,11 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* lado esquerdo */}
-       <div className="hidden lg:block relative bg-gradient-medical">
+      <div className="hidden lg:block relative bg-gradient-medical">
         <img
-          src={LoginHero}
-          alt="login Hero"
-          className="absolute inset-0 w-full h-full object-cover opacity-80"
+          src={loginHero}
+          alt="Bensaude Saúde - Cuidando da sua saúde"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       </div>
 
@@ -68,9 +68,9 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold gradient-text-medical">Entrar na sua conta</h1>
+            <h1 className="text-3xl font-bold gradient-text-medical">Bem-vindo de volta</h1>
             <p className="text-muted-foreground mt-2">
-              Olá, <span className="font-semibold">{userInfo.nome}</span>
+              Olá, <span className="font-semibold">{userInfo.nome.split(' ')[0]}</span>!
             </p>
           </div>
 

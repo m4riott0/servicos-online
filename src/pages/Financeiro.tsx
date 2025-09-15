@@ -67,7 +67,7 @@ export const Financial: React.FC = () => {
     } catch (error) {
       console.error('Error loading installments:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar parcelas",
         description: "Erro ao carregar parcelas. Tente novamente.",
         variant: "destructive",
       });
@@ -88,7 +88,7 @@ export const Financial: React.FC = () => {
     } catch (error) {
       console.error('Error loading credit cards:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar cartões",
         description: "Erro ao carregar cartões. Tente novamente.",
         variant: "destructive",
       });
@@ -117,7 +117,7 @@ export const Financial: React.FC = () => {
     } catch (error) {
       console.error('Error loading extracts:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar extratos",
         description: "Erro ao carregar extratos. Tente novamente.",
         variant: "destructive",
       });
@@ -145,13 +145,13 @@ export const Financial: React.FC = () => {
       window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Sucesso",
+        title: "Download concluído",
         description: "Boleto baixado com sucesso!",
       });
     } catch (error) {
       console.error('Error downloading boleto:', error);
       toast({
-        title: "Erro",
+        title: "Erro no download",
         description: "Erro ao baixar boleto. Tente novamente.",
         variant: "destructive",
       });
@@ -172,13 +172,13 @@ export const Financial: React.FC = () => {
       loadCreditCards();
       
       toast({
-        title: "Sucesso",
+        title: "Cartão removido",
         description: "Cartão removido com sucesso!",
       });
     } catch (error) {
       console.error('Error deleting credit card:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao remover cartão",
         description: "Erro ao remover cartão. Tente novamente.",
         variant: "destructive",
       });

@@ -3,7 +3,7 @@ export interface PerfilAutenticado {
 }
 
 //================================================================================================================== 
-//                                        login types 
+//                                        Login types 
 //================================================================================================================== 
 export interface GenerateTokenRequest {
   usuario: string;
@@ -44,7 +44,7 @@ export interface AccountProfilesRequest {
 }
 
 //================================================================================================================== 
-//                                        cadastro types 
+//                                        Cadastro types 
 //================================================================================================================== 
 export interface CreateAccountRequest {
   cpf: number;
@@ -74,7 +74,7 @@ export interface RegisterPasswordRequest {
 }
 
 //================================================================================================================== 
-//                                        esqueci minha senha types 
+//                                        Esqueci minha senha types 
 //================================================================================================================== 
 export interface RecoverPasswordRequest {
   cpf: number;
@@ -97,7 +97,7 @@ export interface ChangePasswordRequest {
 }
 
 //================================================================================================================== 
-//                                        guia medico types 
+//                                        Guia médico types 
 //================================================================================================================== 
 export interface MedicalGuideCity {
   id: number;
@@ -119,7 +119,7 @@ export interface MedicalGuideProvider {
 }
 
 //================================================================================================================== 
-//                                        autorizações types 
+//                                        Autorizações types 
 //================================================================================================================== 
 export interface BeneficiariesRequest {
   perfilAutenticado: PerfilAutenticado;
@@ -139,7 +139,7 @@ export interface Authorization {
 }
 
 //================================================================================================================== 
-//                                        medicina preventiva types 
+//                                        Medicina preventiva types 
 //================================================================================================================== 
 export interface PreventiveMedicineRequest {
   cpf: number;
@@ -151,7 +151,14 @@ export interface PreventiveMedicineRequest {
 }
 
 //================================================================================================================== 
-//                                        venda types 
+//                                        Odonto types 
+//================================================================================================================== 
+export interface OdontoInterestRequest {
+  perfilAutenticado: PerfilAutenticado;
+}
+
+//================================================================================================================== 
+//                                        Venda types 
 //================================================================================================================== 
 export interface InitialContactRequest {
   nome: string;
@@ -178,7 +185,7 @@ export interface AddDependentRequest {
 }
 
 export interface QuestionaryRequest {
-  cpf:number
+  cpf: number;
 }
 
 //================================================================================================================== 
@@ -204,7 +211,7 @@ export interface SOSSendSMSRequest {
 }
 
 //================================================================================================================== 
-//                                        ortopedico types 
+//                                        Ortopédico types 
 //================================================================================================================== 
 export interface OrthopedicTermAcceptanceRequest {
   perfilAutenticado: PerfilAutenticado;
@@ -226,7 +233,7 @@ export interface OrthopedicSendSMSRequest {
 }
 
 //================================================================================================================== 
-//                                        financeiro types 
+//                                        Financeiro types 
 //================================================================================================================== 
 export interface DownloadBoletoRequest {
   perfilAutenticado: PerfilAutenticado;
@@ -290,6 +297,55 @@ export interface ApiResponse<T = any> {
   dados?: T;
   erro?: string;
   mensagem?: string;
+}
+
+export interface MockBeneficiary {
+  codigo: string;
+  nome: string;
+  cpf: number;
+  dataNascimento: string;
+  plano: string;
+  status: string;
+}
+
+export interface MockAuthorization {
+  id: string;
+  tipo: string;
+  data: string;
+  status: string;
+  beneficiario: string;
+}
+
+export interface MockMedicalProvider {
+  id: number;
+  nome: string;
+  especialidade: string;
+  cidade: string;
+  endereco: string;
+  telefone: string;
+}
+
+export interface MockInstallment {
+  codigo: number;
+  vencimento: string;
+  valor: number;
+  status: string;
+  codigoBarras?: string;
+}
+
+export interface MockCreditCard {
+  id: string;
+  apelido: string;
+  numeroMascarado: string;
+  bandeira: string;
+  titular: string;
+}
+
+export interface MockFinancialExtract {
+  periodo: string;
+  valor: number;
+  tipo: string;
+  descricao: string;
 }
 
 export interface User {

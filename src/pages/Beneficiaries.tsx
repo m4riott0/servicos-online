@@ -17,6 +17,7 @@ import {
   IdCard
 } from 'lucide-react';
 import { commercialService } from '../services/comercialService';
+import { authorizationService } from '../services/authorizationService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import type { Beneficiary } from '../types/api';
@@ -40,18 +41,16 @@ export const Beneficiaries: React.FC = () => {
 
   setIsLoading(true);
   try {
-    const response = await commercialService.addDependent({
+    const response = await authorizationService.getBeneficiaries({
       perfilAutenticado: user.perfilAutenticado,
-      novosDependentes: []
     });
 
-    const beneficiariesArray: Beneficiary[] = response?.dados ?? [];
-    setBeneficiaries(beneficiariesArray);
+    setBeneficiaries(response || []);
 
   } catch (error) {
     console.error('Error loading beneficiaries:', error);
     toast({
-      title: "Erro",
+      title: "Erro ao carregar beneficiários",
       description: "Erro ao carregar beneficiários. Tente novamente.",
       variant: "destructive",
     });

@@ -45,12 +45,12 @@ export const PasswordRecovery: React.FC = () => {
       
       setStep('token');
       toast({
-        title: "Token enviado",
+        title: "Código de recuperação enviado",
         description: "Código de recuperação enviado para seu celular!",
       });
     } catch (error) {
       toast({
-        title: "Erro",
+        title: "Erro ao enviar código",
         description: "Erro ao enviar token. Tente novamente.",
         variant: "destructive",
       });
@@ -73,12 +73,12 @@ export const PasswordRecovery: React.FC = () => {
       
       setStep('password');
       toast({
-        title: "Token válido",
+        title: "Código validado com sucesso",
         description: "Agora você pode definir uma nova senha.",
       });
     } catch (error) {
       toast({
-        title: "Erro",
+        title: "Código inválido",
         description: "Token inválido. Tente novamente.",
         variant: "destructive",
       });
@@ -113,12 +113,12 @@ export const PasswordRecovery: React.FC = () => {
       
       setStep('success');
       toast({
-        title: "Senha alterada",
+        title: "Senha alterada com sucesso",
         description: "Sua senha foi alterada com sucesso!",
       });
     } catch (error) {
       toast({
-        title: "Erro",
+        title: "Erro ao alterar senha",
         description: "Erro ao alterar senha. Tente novamente.",
         variant: "destructive",
       });

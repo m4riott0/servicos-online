@@ -41,7 +41,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    const initializeToken = async () => {
+    const initializeAuth = async () => {
+      setIsLoading(true);
       try {
         const storedToken = apiClient.getStoredToken();
         
@@ -52,10 +53,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
+          console.log('Token inicial gerado com sucesso');
         }
       } catch (error) {
         console.error('Error initializing token:', error);
-        // Try to generate token anyway
         try {
           const credentials = {
             usuario: "mixd",
@@ -63,13 +64,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           };
           const token = await authService.generateToken(credentials);
           apiClient.setToken(token);
+          console.log('Token de fallback gerado com sucesso');
         } catch (tokenError) {
           console.error('Failed to generate token:', tokenError);
+          toast({
+            title: "Erro de conexão",
+            description: "Não foi possível conectar com o servidor.",
+            variant: "destructive",
+          });
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initializeToken();
+    initializeAuth();
   }, []);
 
   const verificaCPF = async (cpf: number): Promise<CPFVerificationResponse | null> => {
@@ -95,6 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
 
+      // Primeiro autentica
       const authResponse = await authService.authenticate({
         codigoPlano: 0,
         codigoContrato: 0,
@@ -103,6 +113,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       if (authResponse.sucesso) {
+        // Depois busca os perfis da conta
         const profilesResponse = await authService.getAccountProfiles({ cpf, senha });
         if (profilesResponse.sucesso && profilesResponse.dados) {
           const userData: User = {
@@ -116,13 +127,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(userData);
           toast({
             title: "Sucesso",
-            description: "Login realizado com sucesso!",
+            description: `Bem-vindo, ${userData.nome}!`,
           });
           return true;
         }
       }
       toast({
-        title: "Erro",
+        title: "Credenciais inválidas",
         description: authResponse.erro || "Credenciais inválidas.",
         variant: "destructive",
       });
@@ -130,7 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -146,13 +157,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await registerService.registerPassword({ cpf, senha });
       if (response.sucesso) {
         toast({
-          title: "Sucesso",
+          title: "Conta criada com sucesso",
           description: "Conta criada com sucesso!",
         });
         return true;
       }
       toast({
-        title: "Erro",
+        title: "Erro ao criar conta",
         description: response.erro || "Erro ao criar conta.",
         variant: "destructive",
       });
@@ -160,7 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -176,14 +187,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.sucesso) {
         toast({
-          title: "Conta criada",
+          title: "Conta criada com sucesso",
           description: "Conta criada com sucesso!",
         });
         return true;
       }
 
       toast({
-        title: "Erro",
+        title: "Erro ao criar conta",
         description: response.erro || "Erro ao criar conta.",
         variant: "destructive",
       });
@@ -191,7 +202,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Create account error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -211,14 +222,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.sucesso) {
         toast({
-          title: "Código enviado",
+          title: "Código de verificação enviado",
           description: `Código de verificação enviado para seu ${type === 'phone' ? 'celular' : 'e-mail'}.`,
         });
         return true;
       }
 
       toast({
-        title: "Erro",
+        title: "Erro ao enviar código",
         description: response.erro || `Erro ao enviar código para ${type === 'phone' ? 'celular' : 'e-mail'}.`,
         variant: "destructive",
       });
@@ -226,7 +237,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Register contact error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -246,7 +257,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.sucesso) {
         toast({
-          title: "Verificação confirmada",
+          title: "Verificação realizada com sucesso",
           description: `${type === 'phone' ? 'Celular' : 'E-mail'} verificado com sucesso!`,
         });
         return true;
@@ -261,7 +272,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Confirm contact error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -275,14 +286,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.sucesso) {
         toast({
-          title: "SMS reenviado",
+          title: "Código reenviado",
           description: "Novo código enviado para seu celular.",
         });
         return true;
       }
 
       toast({
-        title: "Erro",
+        title: "Erro ao reenviar código",
         description: response.erro || "Erro ao reenviar SMS.",
         variant: "destructive",
       });
@@ -290,7 +301,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Resend SMS error:', error);
       toast({
-        title: "Erro",
+        title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
         variant: "destructive",
       });
@@ -300,9 +311,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    // Don't clear token completely, just clear user data
+    // Não limpa o token completamente, apenas os dados do usuário
     toast({
-      title: "Logout",
+      title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
   };

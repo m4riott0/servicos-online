@@ -55,7 +55,7 @@ export const MedicalGuide: React.FC = () => {
     } catch (error) {
       console.error('Error loading medical guide data:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar dados",
         description: "Erro ao carregar dados do guia médico. Tente novamente.",
         variant: "destructive",
       });

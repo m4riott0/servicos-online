@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import type * as ApiTypes from '../types/api';
 
-export const commercialService = {
+export const comercialService = {
   initialContact: async (req: ApiTypes.InitialContactRequest) =>
     (await apiClient.instance.post<ApiTypes.ApiResponse>('/api/Venda/ContatoInicial', req)).data,
 

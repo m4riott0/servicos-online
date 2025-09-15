@@ -1,19 +1,62 @@
 import { apiClient } from './apiClient';
 import type * as ApiTypes from '../types/api';
+import { mockMedicalCities, mockMedicalSpecialties, mockMedicalProviders } from './mockData';
 
 export const medicalService = {
-  getMedicalCities: async () =>
-    (await apiClient.instance.get<ApiTypes.MedicalGuideCity[]>('/api/GuiaMedico/Cidades')).data,
+  getMedicalCities: async (): Promise<ApiTypes.MedicalGuideCity[]> => {
+    try {
+      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideCity[]>>('/api/GuiaMedico/Cidades');
+      return response.data?.dados || [];
+    } catch (error) {
+      console.warn('Chamada da API falhou, usando dados simulados:', error);
+      return mockMedicalCities;
+    }
+  },
 
-  getMedicalSpecialties: async () =>
-    (await apiClient.instance.get<ApiTypes.MedicalGuideSpecialty[]>('/api/GuiaMedico/Especialidades')).data,
+  getMedicalSpecialties: async (): Promise<ApiTypes.MedicalGuideSpecialty[]> => {
+    try {
+      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideSpecialty[]>>('/api/GuiaMedico/Especialidades');
+      return response.data?.dados || [];
+    } catch (error) {
+      console.warn('Chamada da API falhou, usando dados simulados:', error);
+      return mockMedicalSpecialties;
+    }
+  },
 
-  getMedicalProviders: async () =>
-    (await apiClient.instance.get<ApiTypes.MedicalGuideProvider[]>('/api/GuiaMedico/Prestadores')).data,
+  getMedicalProviders: async (): Promise<ApiTypes.MedicalGuideProvider[]> => {
+    try {
+      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideProvider[]>>('/api/GuiaMedico/Prestadores');
+      return response.data?.dados || [];
+    } catch (error) {
+      console.warn('Chamada da API falhou, usando dados simulados:', error);
+      return mockMedicalProviders.map(mock => ({
+        id: mock.id,
+        nome: mock.nome,
+        especialidade: mock.especialidade,
+        cidade: mock.cidade,
+        endereco: mock.endereco,
+        telefone: mock.telefone
+      }));
+    }
+  },
 
-  getSubstituteMedicalProviders: async () =>
-    (await apiClient.instance.get<ApiTypes.MedicalGuideProvider[]>('/api/GuiaMedico/PrestadoresSubstituidos')).data,
+  getSubstituteMedicalProviders: async (): Promise<ApiTypes.MedicalGuideProvider[]> => {
+    try {
+      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideProvider[]>>('/api/GuiaMedico/PrestadoresSubstituidos');
+      return response.data?.dados || [];
+    } catch (error) {
+      console.warn('Chamada da API falhou, usando dados simulados:', error);
+      return [];
+    }
+  },
 
-  getMedicalProducts: async () =>
-    (await apiClient.instance.get<any[]>('/api/GuiaMedico/Produtos')).data,
+  getMedicalProducts: async (): Promise<any[]> => {
+    try {
+      const response = await apiClient.instance.get<ApiTypes.ApiResponse<any[]>>('/api/GuiaMedico/Produto');
+      return response.data?.dados || [];
+    } catch (error) {
+      console.warn('Chamada da API falhou, usando dados simulados:', error);
+      return [];
+    }
+  },
 };

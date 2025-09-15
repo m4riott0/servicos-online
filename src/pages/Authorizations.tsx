@@ -52,14 +52,14 @@ export const Authorizations: React.FC = () => {
       });
       setBeneficiaries(data || []);
       
-      // Selecione automaticamente o primeiro beneficiário, se disponível
+      // Seleciona automaticamente o primeiro beneficiário, se disponível
       if (data && data.length > 0) {
         setSelectedBeneficiary(data[0].codigo);
       }
     } catch (error) {
       console.error('Error loading beneficiaries:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar beneficiários",
         description: "Erro ao carregar beneficiários. Tente novamente.",
         variant: "destructive",
       });
@@ -81,7 +81,7 @@ export const Authorizations: React.FC = () => {
     } catch (error) {
       console.error('Error loading authorizations:', error);
       toast({
-        title: "Erro",
+        title: "Erro ao carregar autorizações",
         description: "Erro ao carregar autorizações. Tente novamente.",
         variant: "destructive",
       });
@@ -111,7 +111,7 @@ export const Authorizations: React.FC = () => {
   const refreshAuthorizations = () => {
     loadAuthorizations();
     toast({
-      title: "Atualizado",
+      title: "Lista atualizada",
       description: "Lista de autorizações atualizada com sucesso.",
     });
   };
