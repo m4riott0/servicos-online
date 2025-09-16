@@ -146,7 +146,7 @@ export interface BeneficiariesRequest {
 
 export interface ListAuthorizationsRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoBeneficiario: string;
+  codigoBeneficiario?: string;
 }
 
 export interface Authorization {

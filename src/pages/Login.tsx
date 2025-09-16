@@ -75,39 +75,23 @@ export const Login: React.FC = () => {
       const response = await verificaCPF(parseInt(cpfNumbers));
       console.log("CPF verification response:", response);
 
-      if (response) {
+      if (response?.sucesso) {
         setUserInfo(response);
+        localStorage.setItem("cpf", cpfNumbers);
+        if (response.email) localStorage.setItem("email", response.email);
+        if (response.celular) localStorage.setItem("celular", response.celular);
 
-        if (
-          response.sucesso &&
-          response.temContaNoApp &&
-          response.temSenhaCadastrada
-        ) {
+        if (response.temContaNoApp && response.temSenhaCadastrada) {
           setStep("login");
-        } else if (response.sucesso) {
-          setStep("register");
         } else {
-          toast({
-            title: "CPF não encontrado",
-            description: response.erro || "CPF não cadastrado no sistema.",
-            variant: "destructive",
-          });
+          setStep("register");
         }
-
-        if (response && response.sucesso) {
-          setUserInfo(response);
-
-          localStorage.setItem("cpf", cpfNumbers);
-          if (response.email) localStorage.setItem("email", response.email);
-          if (response.celular)
-            localStorage.setItem("celular", response.celular);
-
-          if (response.temContaNoApp && response.temSenhaCadastrada) {
-            setStep("login");
-          } else {
-            setStep("register");
-          }
-        }
+      } else if (response) {
+        toast({
+          title: "Falha na verificação",
+          description: response.erro || "Não foi possível verificar o CPF.",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "CPF não encontrado",

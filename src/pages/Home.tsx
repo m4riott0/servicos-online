@@ -1,130 +1,229 @@
-import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { 
-  Users, 
-  FileText, 
-  CreditCard, 
+{/*TODO: refatorar a nova home*/}
+
+import React, { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { useToast } from "../hooks/use-toast";
+import { authorizationService } from "../services/authorizationService";
+import { financeiroService } from "../services/financeiroService";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Users,
+  FileText,
+  CreditCard,
   Calendar,
   TrendingUp,
   Bell,
   Heart,
-  Shield
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+  Shield,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import type {
+  Beneficiary,
+  Authorization,
+  Installment,
+  FinancialExtract,
+} from "../types/api";
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const quickActions = [
-    {
-      title: 'Guia Médico',
-      description: 'Encontre prestadores próximos a você',
-      icon: Heart,
-      href: '/guia-medico',
-      color: 'bg-gradient-to-br from-primary/10 to-primary/20',
-    },
-    {
-      title: 'Autorizações',
-      description: 'Acompanhe suas solicitações',
-      icon: FileText,
-      href: '/autorizacoes',
-      color: 'bg-gradient-to-br from-secondary/10 to-secondary/20',
-    },
-    {
-      title: 'Financeiro',
-      description: 'Visualize boletos e extratos',
-      icon: CreditCard,
-      href: '/financeiro',
-      color: 'bg-gradient-to-br from-warning/10 to-warning/20',
-    },
-    {
-      title: 'Serviços SOS',
-      description: 'Emergências 24h',
-      icon: Shield,
-      href: '/servicos/sos',
-      color: 'bg-gradient-to-br from-destructive/10 to-destructive/20',
-    },
-  ];
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+  const [authorizations, setAuthorizations] = useState<Authorization[]>([]);
+  const [installments, setInstallments] = useState<Installment[]>([]);
+  const [coParticipationExtract, setCoParticipationExtract] = useState<
+    FinancialExtract[]
+  >([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'authorization',
-      title: 'Autorização aprovada',
-      description: 'Consulta cardiológica - Dr. João Silva',
-      date: '2024-09-09',
-      status: 'success',
-    },
-    {
-      id: 2,
-      type: 'payment',
-      title: 'Boleto disponível',
-      description: 'Mensalidade de Setembro 2024',
-      date: '2024-09-08',
-      status: 'warning',
-    },
-    {
-      id: 3,
-      type: 'appointment',
-      title: 'Consulta agendada',
-      description: 'Medicina preventiva - Check-up anual',
-      date: '2024-09-07',
-      status: 'info',
-    },
-  ];
+  useEffect(() => {
+    if (user?.perfilAutenticado) {
+      loadHomeData();
+    } else {
+      setIsLoadingData(false);
+    }
+  }, [user]);
 
-  const stats = [
-    {
-      title: 'Autorizações Pendentes',
-      value: '2',
-      icon: FileText,
-      color: 'text-warning',
-    },
-    {
-      title: 'Beneficiários Ativos',
-      value: '4',
-      icon: Users,
-      color: 'text-success',
-    },
-    {
-      title: 'Consultas este mês',
-      value: '3',
-      icon: Calendar,
-      color: 'text-primary',
-    },
-    {
-      title: 'Economia total',
-      value: 'R$ 2.450',
-      icon: TrendingUp,
-      color: 'text-secondary',
-    },
-  ];
+  const loadHomeData = async () => {
+    if (!user?.perfilAutenticado) {
+      setIsLoadingData(false);
+      return;
+    }
+
+    setIsLoadingData(true);
+    try {
+      const [
+        loadedBeneficiaries,
+        loadedInstallments,
+        loadedCoParticipationExtract,
+        allAuthorizations,
+      ] = await Promise.all([
+        authorizationService.getBeneficiaries({
+          perfilAutenticado: user.perfilAutenticado,
+        }),
+
+        financeiroService.listInstallments({
+          perfilAutenticado: user.perfilAutenticado,
+        }),
+
+        financeiroService.getCoParticipationExtract({
+          perfilAutenticado: user.perfilAutenticado,
+        }),
+
+        authorizationService.getAuthorizations({
+          perfilAutenticado: user.perfilAutenticado,
+        }),
+      ]);
+
+      setBeneficiaries(loadedBeneficiaries || []);
+      setInstallments(loadedInstallments || []);
+      setCoParticipationExtract(loadedCoParticipationExtract || []);
+      setAuthorizations(allAuthorizations || []);
+    } catch (error) {
+      console.error("Error loading home data:", error);
+      toast({
+        title: "Erro ao carregar dados",
+        description:
+          "Não foi possível carregar as informações da página inicial.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const stats = useMemo(() => {
+    const pendingAuthorizations = authorizations.filter(
+      (auth) => auth.status.toLowerCase() === "pendente"
+    ).length;
+
+    const activeBeneficiaries = beneficiaries.filter(
+      (b) => b.status.toLowerCase() === "ativo"
+    ).length;
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const consultationsThisMonth = authorizations.filter(
+      (auth) =>
+        auth.tipo.toLowerCase() === "consulta" &&
+        new Date(auth.data).getMonth() === currentMonth &&
+        new Date(auth.data).getFullYear() === currentYear
+    ).length;
+
+    const totalSavings = coParticipationExtract.reduce(
+      (sum, item) => sum + item.valor,
+      0
+    );
+
+    return [
+      {
+        title: "Autorizações Pendentes",
+        value: pendingAuthorizations.toString(),
+        icon: FileText,
+        color: "text-warning",
+      },
+      {
+        title: "Beneficiários Ativos",
+        value: activeBeneficiaries.toString(),
+        icon: Users,
+        color: "text-success",
+      },
+      {
+        title: "Consultas este mês",
+        value: consultationsThisMonth.toString(),
+        icon: Calendar,
+        color: "text-primary",
+      },
+      {
+        title: "Economia total",
+        value: `R$ ${totalSavings.toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        icon: TrendingUp,
+        color: "text-secondary",
+      },
+    ];
+  }, [beneficiaries, authorizations, coParticipationExtract]);
+
+  const recentActivities = useMemo(() => {
+    const combinedActivities = [
+      ...authorizations.map((auth) => ({
+        id: auth.id,
+        type: "authorization",
+        title: `Autorização ${
+          auth.status.toLowerCase() === "aprovado"
+            ? "aprovada"
+            : auth.status.toLowerCase() === "pendente"
+            ? "pendente"
+            : "negada"
+        }`,
+        description: `${auth.tipo} - ${auth.beneficiario}`,
+        date: auth.data,
+        status:
+          auth.status.toLowerCase() === "aprovado"
+            ? "success"
+            : auth.status.toLowerCase() === "pendente"
+            ? "warning"
+            : "destructive",
+      })),
+      ...installments.map((inst) => ({
+        id: inst.codigo,
+        type: "payment",
+        title: `Mensalidade ${inst.status.toLowerCase()}`,
+        description: `Vencimento: ${new Date(
+          inst.vencimento
+        ).toLocaleDateString("pt-BR")} - R$ ${inst.valor.toLocaleString(
+          "pt-BR",
+          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+        )}`,
+        date: inst.vencimento,
+        status:
+          inst.status.toLowerCase() === "pago"
+            ? "success"
+            : inst.status.toLowerCase() === "pendente"
+            ? "warning"
+            : "destructive",
+      })),
+    ];
+
+    return combinedActivities
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [authorizations, installments]);
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      {/* Welcome Section */}
       <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              Olá, {user?.nome?.split(' ')[0]}!
+              Olá, {user?.nome?.split(" ")[0]}!
             </h1>
             <p className="text-muted-foreground text-lg">
               Gerencie seus benefícios de saúde com facilidade
             </p>
           </div>
-          <div className="hidden md:block">
-            <div className="w-24 h-24 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-medical">
-              <Heart className="h-12 w-12 text-primary-foreground" />
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <Card key={index} className="card-medical">
@@ -141,31 +240,6 @@ export const Home: React.FC = () => {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">Acesso Rápido</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickActions.map((action, index) => (
-            <Link key={index} to={action.href}>
-              <Card className="card-medical hover:scale-105 transition-transform duration-300 cursor-pointer">
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-3`}>
-                    <action.icon className="h-6 w-6 text-foreground" />
-                  </div>
-                  <CardTitle className="text-lg">{action.title}</CardTitle>
-                  <CardDescription>{action.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="outline" className="w-full">
-                    Acessar
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Recent Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Activities */}
@@ -179,24 +253,37 @@ export const Home: React.FC = () => {
           <CardContent>
             <div className="space-y-4">
               {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-4 pb-4 border-b border-border/50 last:border-0">
+                <div
+                  key={activity.id}
+                  className="flex items-start space-x-4 pb-4 border-b border-border/50 last:border-0"
+                >
                   <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium">{activity.title}</h4>
-                      <Badge 
-                        variant={activity.status === 'success' ? 'default' : 
-                               activity.status === 'warning' ? 'destructive' : 'secondary'}
+                      <Badge
+                        variant={
+                          activity.status === "success"
+                            ? "default"
+                            : activity.status === "warning"
+                            ? "secondary"
+                            : "destructive"
+                        }
                       >
-                        {activity.status === 'success' ? 'Aprovado' :
-                         activity.status === 'warning' ? 'Pendente' : 'Info'}
+                        {activity.status === "success"
+                          ? "Aprovado"
+                          : activity.status === "warning"
+                          ? "Pendente"
+                          : activity.status === "destructive"
+                          ? "Negado"
+                          : "Info"}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
                       {activity.description}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(activity.date).toLocaleDateString('pt-BR')}
+                      {new Date(activity.date).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
                 </div>
@@ -218,18 +305,26 @@ export const Home: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">CPF:</span>
-                <span className="font-medium">{user?.cpf}</span>
+                <span className="font-medium">
+                  {user?.cpf
+                    ?.toString()
+                    .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Email:</span>
-                <span className="font-medium">{user?.email || 'Não informado'}</span>
+                <span className="font-medium">
+                  {user?.email || "Não informado"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Celular:</span>
-                <span className="font-medium">{user?.celular || 'Não informado'}</span>
+                <span className="font-medium">
+                  {user?.celular || "Não informado"}
+                </span>
               </div>
             </div>
-            
+
             <Button variant="outline" className="w-full mt-6">
               Atualizar Dados
             </Button>

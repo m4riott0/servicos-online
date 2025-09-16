@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
@@ -8,20 +8,16 @@ import {
   Users, 
   User, 
   Calendar, 
-  Phone, 
-  Mail,
   Plus,
   Edit,
   Shield,
   Heart,
   IdCard
 } from 'lucide-react';
-import { commercialService } from '../services/comercialService';
 import { authorizationService } from '../services/authorizationService';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/use-toast';
 import type { Beneficiary } from '../types/api';
-import { combineEventHandlers } from 'recharts/types/util/ChartUtils';
 
 export const Beneficiaries: React.FC = () => {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);

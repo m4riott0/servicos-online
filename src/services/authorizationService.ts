@@ -11,7 +11,8 @@ export const authorizationService = {
       >("/api/Autorizacoes/Beneficiarios", req);
       return response.data?.dados || [];
     } catch (error) {
-      console.warn("Chamada da API falhou, usando dados simulados:", error);
+      console.error("Erro ao buscar beneficiários:", error);
+      throw error;
     }
   },
 
@@ -24,7 +25,8 @@ export const authorizationService = {
       >("/api/Autorizacoes/ListarAutorizacoes", req);
       return response.data?.dados || [];
     } catch (error) {
-      console.warn("Chamada da API falhou, usando dados simulados:", error);
+      console.error("Erro ao buscar autorizações:", error);
+      throw error;
     }
   },
 };

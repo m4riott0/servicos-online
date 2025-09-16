@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { authService } from "../services/authService";
 import { registerService } from "../services/registerService";
 import type { User, CPFVerificationResponse } from "../types/api";
@@ -47,26 +47,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user;
 
   // Verifica se o CPF já existe no sistema
-  const verificaCPF = async (
+  const verificaCPF = useCallback(async (
     cpf: number
   ): Promise<CPFVerificationResponse | null> => {
     try {
       setIsLoading(true);
       return await authService.verificaCPF({ cpf });
-    } catch {
+    } catch (error: any) {
       toast({
         title: "Erro",
-        description: "Erro ao verificar CPF.",
+        description: error?.response?.data?.erro || "Erro ao verificar CPF.",
         variant: "destructive",
       });
       return null;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Realiza login validando perfis e sessão
-  const login = async (cpf: number, senha: string): Promise<boolean> => {
+  const login = useCallback(async (cpf: number, senha: string): Promise<boolean> => {
     try {
       setIsLoading(true);
 
@@ -107,15 +107,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
-      // Monta dados do usuário autenticado
       const userData = {
         id: cpf.toString(),
         nome: authResponse.nome || perfil.nome || "Usuário",
         cpf,
         email: authResponse.email || perfil.email || "",
         celular: authResponse.celular || perfil.celular || "",
-        perfilAutenticado: perfil.perfilAutenticado || null,
-        codigoSessao: authResponse.codigoSessao || null,
+        perfilAutenticado: (() => {
+          const sessao = authResponse.codigoSessao 
+            ? parseInt(authResponse.codigoSessao, 10) 
+            : perfil.perfilAutenticado?.codigoSessao;
+          
+          // Garante que o perfilAutenticado só seja criado com um codigoSessao válido.
+          return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
+        })(),
       };
 
       setUser(userData);
@@ -127,7 +132,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return true;
     } catch (error: any) {
-      // Trata diferentes erros de conexão/autenticação
       let errorTitle = "Erro de conexão";
       let errorDescription =
         "Não foi possível conectar ao servidor. Tente novamente.";
@@ -168,10 +172,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Cadastra senha para o usuário
-  const register = async (cpf: number, senha: string): Promise<boolean> => {
+  const register = useCallback(async (cpf: number, senha: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       const response = await registerService.registerPassword({ cpf, senha });
@@ -198,10 +202,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Cria conta inicial (sem senha ainda)
-  const createAccount = async (cpf: number): Promise<boolean> => {
+  const createAccount = useCallback(async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.createAccount({ cpf });
 
@@ -227,10 +231,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     }
-  };
+  }, [toast]);
 
   // Registra contato (telefone ou e-mail)
-  const registerContact = async (
+  const registerContact = useCallback(async (
     cpf: number,
     type: "phone" | "email",
     contact: string
@@ -275,10 +279,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     }
-  };
+  }, [toast]);
 
   // Confirma contato (valida token SMS ou e-mail)
-  const confirmContact = async (
+  const confirmContact = useCallback(async (
     cpf: number,
     type: "phone" | "email",
     contact: string,
@@ -325,10 +329,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     }
-  };
+  }, [toast]);
 
   // Reenvia SMS de verificação
-  const resendSMS = async (cpf: number): Promise<boolean> => {
+  const resendSMS = useCallback(async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.resendSMS({ cpf });
 
@@ -354,30 +358,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       return false;
     }
-  };
+  }, [toast]);
 
   // Remove dados do usuário da sessão
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
     });
-  };
+  }, [toast]);
 
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated,
-    login,
-    logout,
-    verificaCPF,
-    register,
-    createAccount,
-    registerContact,
-    confirmContact,
-    resendSMS,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated,
+      login,
+      logout,
+      verificaCPF,
+      register,
+      createAccount,
+      registerContact,
+      confirmContact,
+      resendSMS,
+    }),
+    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

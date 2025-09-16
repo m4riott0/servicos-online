@@ -78,7 +78,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
       setIsSubmitting(false);
     }
   };
-
+{/* TODO: fazer modal para selecionar o contrato caso o cpf digitado tenha 2 contratos */}
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* lado esquerdo */}
