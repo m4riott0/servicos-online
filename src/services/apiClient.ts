@@ -91,6 +91,10 @@ class ApiClient {
     this.token = null;
   }
 
+  renewToken() {
+    this.tokenPromise = this.generateToken();
+  }
+
   get instance() {
     return this.api;
   }
