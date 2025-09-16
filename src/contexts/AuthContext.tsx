@@ -107,6 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
+      // Busca o status de beneficiário
+      const verificationResponse = await authService.verificaCPF({ cpf });
+      const isBeneficiary = verificationResponse?.beneficiario ?? false;
+
+
       const userData = {
         id: cpf.toString(),
         nome: authResponse.nome || perfil.nome || "Usuário",
@@ -121,6 +126,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Garante que o perfilAutenticado só seja criado com um codigoSessao válido.
           return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
         })(),
+        codigoPlano: perfil.codigoPlano,
+        codigoContrato: perfil.codigoContrato,
+        isBeneficiary: isBeneficiary,
       };
 
       setUser(userData);

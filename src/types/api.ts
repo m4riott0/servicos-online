@@ -146,7 +146,6 @@ export interface BeneficiariesRequest {
 
 export interface ListAuthorizationsRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoBeneficiario?: string;
 }
 
 export interface Authorization {
@@ -373,7 +372,10 @@ export interface User {
   cpf: number;
   email: string;
   celular: string;
-  perfilAutenticado?: PerfilAutenticado;
+  perfilAutenticado: PerfilAutenticado | null;
+  codigoPlano?: number;
+  codigoContrato?: number;
+  isBeneficiary?: boolean;
 }
 
 export interface Beneficiary {

@@ -50,7 +50,6 @@ export const Authorizations: React.FC = () => {
       try {
         const data = await authorizationService.getAuthorizations({
           perfilAutenticado: user.perfilAutenticado,
-          codigoBeneficiario: beneficiaryCode,
         });
         setAuthorizations(data);
       } catch (error) {
@@ -89,7 +88,6 @@ export const Authorizations: React.FC = () => {
         const loadedAuthorizations =
           await authorizationService.getAuthorizations({
             perfilAutenticado: user.perfilAutenticado,
-            codigoBeneficiario: firstBeneficiaryCode,
           });
         setAuthorizations(loadedAuthorizations);
       } else {
