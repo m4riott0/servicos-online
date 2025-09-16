@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Eye, EyeOff, Lock, User, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import loginHero from '../assets/login-hero.png';
 
@@ -25,7 +25,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   if (isAuthenticated) {
@@ -44,12 +44,39 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
       return;
     }
 
+    if (senha.length < 4) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 4 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    console.log('Attempting login with CPF:', cpf);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
-    const success = await login(cpfNumbers, senha);
-    console.log('Login result:', success);
-    setIsSubmitting(false);
+    
+    try {
+      const cpfNumerico = cpf.replace(/\D/g, "");
+      console.log('Tentando login com CPF:', cpfNumerico, 'e senha:', senha);
+
+      const success = await login(parseInt(cpfNumerico), senha);
+      console.log('Resultado do login:', success);
+
+      if (!success) {
+        console.log('Login falhou - erro já tratado no contexto');
+      } else {
+        console.log('Login bem-sucedido!');
+      }
+    } catch (err) {
+      console.error("Erro inesperado no login:", err);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,11 +126,14 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                       onChange={(e) => setSenha(e.target.value)}
                       className="input-medical pl-10 pr-10"
                       required
+                      autoComplete="current-password"
+                      disabled={isSubmitting}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
+                      disabled={isSubmitting}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -114,7 +144,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                   type="submit"
                   className="w-full"
                   variant="medical"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !senha}
                 >
                   {isSubmitting ? (
                     <>
@@ -137,7 +167,8 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                   <button
                     type="button"
                     onClick={onBack}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isSubmitting}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Voltar para verificação de CPF

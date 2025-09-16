@@ -13,8 +13,7 @@ const Index = () => {
     );
   }
 
-  // Redirect to appropriate page based on authentication
-  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+  return <Navigate to={isAuthenticated ? "/Home" : "/login"} replace />;
 };
 
 export default Index;

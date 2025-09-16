@@ -2,14 +2,14 @@ export interface PerfilAutenticado {
   codigoSessao: number;
 }
 
-//================================================================================================================== 
-//                                        Login types 
-//================================================================================================================== 
 export interface GenerateTokenRequest {
   usuario: string;
   senha: string;
 }
 
+//================================================================================================================== 
+//                                        Login types 
+//================================================================================================================== 
 export interface CPFVerificationRequest {
   cpf: number;
 }
@@ -38,9 +38,28 @@ export interface AuthenticationRequest {
   senha: string;
 }
 
+export interface AuthResponse {
+  sucesso: boolean;
+  codigoSessao?: string;
+  nome?: string;
+  cpf?: number;
+  email?: string;
+  celular?: string;
+  erro?: string;
+}
+
 export interface AccountProfilesRequest {
   cpf: number;
   senha: string;
+}
+
+export interface AccountProfile {
+  codigoPlano: number;
+  codigoContrato: number;
+  nome?: string;
+  email?: string;
+  celular?: string;
+  perfilAutenticado?: PerfilAutenticado;
 }
 
 //================================================================================================================== 

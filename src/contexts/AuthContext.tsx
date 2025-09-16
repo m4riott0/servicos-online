@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { apiClient } from "../services/apiClient";
+import React, { createContext, useContext, useState } from "react";
 import { authService } from "../services/authService";
 import { registerService } from "../services/registerService";
 import type { User, CPFVerificationResponse } from "../types/api";
@@ -32,9 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
 
@@ -49,62 +46,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      setIsLoading(true);
-      try {
-        const storedToken = apiClient.getStoredToken();
-
-        if (!storedToken) {
-          const credentials = {
-            usuario: "mixd",
-            senha:
-              "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
-          };
-          const token = await authService.generateToken(credentials);
-          apiClient.setToken(token);
-          console.log("Token inicial gerado com sucesso");
-        }
-      } catch (error) {
-        console.error("Error initializing token:", error);
-        try {
-          const credentials = {
-            usuario: "mixd",
-            senha:
-              "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
-          };
-          const token = await authService.generateToken(credentials);
-          apiClient.setToken(token);
-          console.log("Token de fallback gerado com sucesso");
-        } catch (tokenError) {
-          console.error("Failed to generate token:", tokenError);
-          toast({
-            title: "Erro de conexão",
-            description: "Não foi possível conectar com o servidor.",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
-
+  // Verifica se o CPF já existe no sistema
   const verificaCPF = async (
     cpf: number
   ): Promise<CPFVerificationResponse | null> => {
     try {
       setIsLoading(true);
-
-      const response = await authService.verificaCPF({ cpf });
-      return response;
-    } catch (error) {
-      console.error("Error verifying CPF:", error);
+      return await authService.verificaCPF({ cpf });
+    } catch {
       toast({
         title: "Erro",
-        description: "Erro ao verificar CPF. Tente novamente.",
+        description: "Erro ao verificar CPF.",
         variant: "destructive",
       });
       return null;
@@ -113,9 +65,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Realiza login validando perfis e sessão
   const login = async (cpf: number, senha: string): Promise<boolean> => {
-    const cpfString = cpf.toString().replace(/\D/g, "");
-
     try {
       setIsLoading(true);
 
@@ -123,116 +74,95 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         cpf,
         senha,
       });
-      console.log("Resposta dos perfis da conta:", profilesResponse);
 
-      if (Array.isArray(profilesResponse) && profilesResponse.length > 0) {
-        const perfil = profilesResponse[0];
-
-        const authResponse = await authService.authenticate({
-          codigoPlano: perfil.codigoPlano,
-          codigoContrato: perfil.codigoContrato,
-          cpf: parseInt(cpfString), 
-          senha,
-        });
-
-        console.log("Payload enviado para autenticação:", {
-          codigoPlano: perfil.codigoPlano,
-          codigoContrato: perfil.codigoContrato,
-          cpf: cpfString,
-          senha,
-        });
-
-        if (authResponse.sucesso) {
-          const userData: User = {
-            id: cpf.toString(),
-            nome: perfil.nome || "Usuário",
-            cpf,
-            email: perfil.email || "",
-            celular: perfil.celular || "",
-            perfilAutenticado: perfil.perfilAutenticado || null,
-          };
-
-          setUser(userData);
-
-          toast({
-            title: "Sucesso",
-            description: `Bem-vindo, ${userData.nome}!`,
-          });
-
-          return true;
-        }
-
+      if (!Array.isArray(profilesResponse) || profilesResponse.length === 0) {
         toast({
-          title: "Credenciais inválidas",
-          description: authResponse.erro || "Senha incorreta.",
+          title: "CPF ou senha inválidos",
+          description: "Verifique suas credenciais e tente novamente.",
           variant: "destructive",
         });
         return false;
       }
 
-      if (profilesResponse?.sucesso && profilesResponse?.dados) {
-        const dados = profilesResponse.dados;
+      const perfil = profilesResponse[0];
 
-        const authResponse = await authService.authenticate({
-          codigoPlano: dados.codigoPlano || 0,
-          codigoContrato: dados.codigoContrato || 0,
-          cpf: parseInt(cpfString),
-          senha,
-        });
+      const authResponse = await authService.authenticate({
+        codigoPlano: perfil.codigoPlano,
+        codigoContrato: perfil.codigoContrato,
+        cpf,
+        senha,
+      });
 
-        if (authResponse.sucesso) {
-          const userData: User = {
-            id: cpf.toString(),
-            nome: dados.nome || dados?.dados?.nome || "Usuário",
-            cpf,
-            email: dados.email || dados?.dados?.email || "",
-            celular: dados.celular || dados?.dados?.celular || "",
-            perfilAutenticado:
-              dados.perfilAutenticado ||
-              dados?.dados?.perfilAutenticado ||
-              null,
-          };
+      const isSuccess =
+        authResponse &&
+        (authResponse.sucesso === true ||
+          (authResponse.codigoSessao && authResponse.nome));
 
-          setUser(userData);
-
-          toast({
-            title: "Sucesso",
-            description: `Bem-vindo, ${userData.nome}!`,
-          });
-
-          return true;
-        }
-
+      if (!isSuccess) {
         toast({
-          title: "Credenciais inválidas",
-          description: authResponse.erro || "Senha incorreta.",
+          title: "CPF ou senha inválidos",
+          description: "Verifique suas credenciais e tente novamente.",
           variant: "destructive",
         });
         return false;
+      }
+
+      // Monta dados do usuário autenticado
+      const userData = {
+        id: cpf.toString(),
+        nome: authResponse.nome || perfil.nome || "Usuário",
+        cpf,
+        email: authResponse.email || perfil.email || "",
+        celular: authResponse.celular || perfil.celular || "",
+        perfilAutenticado: perfil.perfilAutenticado || null,
+        codigoSessao: authResponse.codigoSessao || null,
+      };
+
+      setUser(userData);
+
+      toast({
+        title: "Login realizado com sucesso",
+        description: `Bem-vindo, ${perfil.nome?.split(" ")[0] || "Usuário"}!`,
+      });
+
+      return true;
+    } catch (error: any) {
+      // Trata diferentes erros de conexão/autenticação
+      let errorTitle = "Erro de conexão";
+      let errorDescription =
+        "Não foi possível conectar ao servidor. Tente novamente.";
+
+      if (error.response) {
+        const status = error.response.status;
+
+        switch (status) {
+          case 401:
+            errorTitle = "CPF ou senha inválidos";
+            errorDescription = "Verifique suas credenciais e tente novamente.";
+            break;
+          case 400:
+            errorTitle = "Dados inválidos";
+            errorDescription = "Verifique os dados informados.";
+            break;
+          case 500:
+            errorTitle = "Erro do servidor";
+            errorDescription =
+              "Erro interno do servidor. Tente novamente em alguns minutos.";
+            break;
+          default:
+            errorTitle = "Erro inesperado";
+            errorDescription = `Erro ${status}. Tente novamente.`;
+        }
+      } else if (error.code === "NETWORK_ERROR") {
+        errorTitle = "Erro de rede";
+        errorDescription = "Verifique sua conexão com a internet.";
       }
 
       toast({
-        title: "Erro ao buscar perfis",
-        description: "Nenhum perfil encontrado para este CPF.",
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
       });
-      return false;
-    } catch (error: any) {
-      console.error("Login error:", error);
-
-      if (error.response?.status === 401) {
-        toast({
-          title: "Senha incorreta",
-          description: "Verifique sua senha e tente novamente.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro de conexão",
-          description: "Erro no servidor. Tente novamente.",
-          variant: "destructive",
-        });
-      }
 
       return false;
     } finally {
@@ -240,6 +170,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Cadastra senha para o usuário
   const register = async (cpf: number, senha: string): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -257,8 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
       return false;
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch {
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -270,6 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Cria conta inicial (sem senha ainda)
   const createAccount = async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.createAccount({ cpf });
@@ -288,8 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
       return false;
-    } catch (error) {
-      console.error("Create account error:", error);
+    } catch {
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -299,6 +229,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Registra contato (telefone ou e-mail)
   const registerContact = async (
     cpf: number,
     type: "phone" | "email",
@@ -319,7 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.sucesso) {
         toast({
           title: "Código de verificação enviado",
-          description: `Código de verificação enviado para seu ${
+          description: `Código enviado para seu ${
             type === "phone" ? "celular" : "e-mail"
           }.`,
         });
@@ -336,8 +267,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
       return false;
-    } catch (error) {
-      console.error("Register contact error:", error);
+    } catch {
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -347,6 +277,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Confirma contato (valida token SMS ou e-mail)
   const confirmContact = async (
     cpf: number,
     type: "phone" | "email",
@@ -386,8 +317,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
       return false;
-    } catch (error) {
-      console.error("Confirm contact error:", error);
+    } catch {
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -397,6 +327,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Reenvia SMS de verificação
   const resendSMS = async (cpf: number): Promise<boolean> => {
     try {
       const response = await registerService.resendSMS({ cpf });
@@ -415,8 +346,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: "destructive",
       });
       return false;
-    } catch (error) {
-      console.error("Resend SMS error:", error);
+    } catch {
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -426,9 +356,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Remove dados do usuário da sessão
   const logout = () => {
     setUser(null);
-    // Não limpa o token completamente, apenas os dados do usuário
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",

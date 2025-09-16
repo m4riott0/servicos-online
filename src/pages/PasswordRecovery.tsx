@@ -321,8 +321,8 @@ export const PasswordRecovery: React.FC = () => {
           {step === "success" && (
             <>
               <CardHeader className="text-center">
-                <CheckCircle className="h-16 w-16 text-success mx-auto mb-4" />
-                <CardTitle className="text-success">Senha Alterada!</CardTitle>
+                <CheckCircle className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+                <CardTitle className="text-blue-500">Senha Alterada!</CardTitle>
                 <CardDescription>
                   Sua senha foi alterada com sucesso. Agora você pode fazer
                   login.
