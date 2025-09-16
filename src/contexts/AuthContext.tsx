@@ -107,10 +107,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
-      // Busca o status de beneficiário
       const verificationResponse = await authService.verificaCPF({ cpf });
-      const isBeneficiary = verificationResponse?.beneficiario ?? false;
-
+      const ehBeneficiary = verificationResponse?.beneficiario ?? false;
 
       const userData = {
         id: cpf.toString(),
@@ -128,7 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         })(),
         codigoPlano: perfil.codigoPlano,
         codigoContrato: perfil.codigoContrato,
-        isBeneficiary: isBeneficiary,
+        ehBeneficiary: ehBeneficiary,
       };
 
       setUser(userData);
