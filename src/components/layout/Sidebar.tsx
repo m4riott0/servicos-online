@@ -4,10 +4,10 @@ import {
   Home,
   FileText,
   CreditCard,
-  Users,
   Stethoscope,
   Shield,
   Ribbon,
+  BadgeDollarSign,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -26,33 +26,33 @@ const navigation: NavItem[] = [
     icon: Home,
   },
   {
-    name: "Autorizações", // Corrigido para "Autorizações"
+    name: "Autorizações", 
     href: "/autorizacoes",
     icon: FileText,
   },
   {
-    name: "Financeiro", // Corrigido para "Financeiro"
+    name: "Financeiro", 
     href: "/financeiro",
     icon: CreditCard,
   },
   {
-    name: "Beneficiários", // Corrigido para "Beneficiários"
-    href: "/beneficiarios",
-    icon: Users,
+    name: "Comercial", 
+    href: "/comercial",
+    icon: BadgeDollarSign ,
   },
   {
-    name: "Guia Médico", // Corrigido para "Guia Médico"
+    name: "Guia Médico", 
     href: "/guia-medico",
     icon: Stethoscope,
   },
   {
-    name: "SOS Saúde", // Corrigido para "SOS Saúde"
-    href: "/servicos/sos",
+    name: "SOS Saúde",
+    href: "/sos",
     icon: Shield,
   },
   {
-    name: "Ortopédico", // Corrigido para "Ortopédico"
-    href: "/servicos/ortopedico",
+    name: "Ortopédico", 
+    href: "/ortopedico",
     icon: Ribbon,
   },
 ];
