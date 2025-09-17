@@ -117,10 +117,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: authResponse.email || perfil.email || "",
         celular: authResponse.celular || perfil.celular || "",
         perfilAutenticado: (() => {
-          const sessao = authResponse.codigoSessao 
-            ? parseInt(authResponse.codigoSessao, 10) 
+          const sessao = authResponse.codigoSessao
+            ? parseInt(authResponse.codigoSessao, 10)
             : perfil.perfilAutenticado?.codigoSessao;
-          
+
           // Garante que o perfilAutenticado só seja criado com um codigoSessao válido.
           return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
         })(),
@@ -185,19 +185,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await registerService.registerPassword({ cpf, senha });
-      if (response.sucesso) {
-        toast({
-          title: "Conta criada com sucesso",
-          description: "Conta criada com sucesso!",
-        });
-        return true;
-      }
       toast({
-        title: "Erro ao criar conta",
-        description: response.erro || "Erro ao criar conta.",
-        variant: "destructive",
+        title: "Conta criada com sucesso",
+        description: "Acesse o sistema!",
       });
-      return false;
+      return true;
+
     } catch {
       toast({
         title: "Erro de conexão",
@@ -215,20 +208,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await registerService.createAccount({ cpf });
 
-      if (response.sucesso) {
-        toast({
-          title: "Conta criada com sucesso",
-          description: "Conta criada com sucesso!",
-        });
-        return true;
-      }
-
       toast({
-        title: "Erro ao criar conta",
-        description: response.erro || "Erro ao criar conta.",
-        variant: "destructive",
+        title: "Conta criada com sucesso",
+        description: "Conta criada com sucesso!",
       });
-      return false;
+      return true;
     } catch {
       toast({
         title: "Erro de conexão",
@@ -246,38 +230,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     contact: string
   ): Promise<boolean> => {
     try {
-      let response;
 
       if (type === "phone") {
-        response = await registerService.registerPhone({
+        await registerService.registerPhone({
           cpf,
           celular: parseInt(contact),
         });
       } else {
-        response = await registerService.registerEmail({ cpf, email: contact });
-      }
-
-      if (response.sucesso) {
-        toast({
-          title: "Código de verificação enviado",
-          description: `Código enviado para seu ${
-            type === "phone" ? "celular" : "e-mail"
-          }.`,
-        });
-        return true;
+        await registerService.registerEmail({ cpf, email: contact });
       }
 
       toast({
-        title: "Erro ao enviar código",
-        description:
-          response.erro ||
-          `Erro ao enviar código para ${
-            type === "phone" ? "celular" : "e-mail"
-          }.`,
-        variant: "destructive",
+        title: "Código de verificação enviado",
+        description: `Código enviado para seu ${type === "phone" ? "celular" : "e-mail"}.`,
+        variant: "default"
       });
-      return false;
-    } catch {
+
+      return true;
+
+    } catch (erro) {
+      console.error('Erro ao registrar contato:', erro); // Adicione esta linha
       toast({
         title: "Erro de conexão",
         description: "Erro no servidor. Tente novamente.",
@@ -311,22 +283,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       }
 
-      if (response.sucesso) {
-        toast({
-          title: "Verificação realizada com sucesso",
-          description: `${
-            type === "phone" ? "Celular" : "E-mail"
-          } verificado com sucesso!`,
-        });
-        return true;
-      }
-
       toast({
-        title: "Código inválido",
-        description: response.erro || "Código de verificação inválido.",
-        variant: "destructive",
+        title: "Verificação realizada com sucesso",
+        description: `${type === "phone" ? "Celular" : "E-mail"
+          } verificado com sucesso!`,
       });
-      return false;
+      return true;
     } catch {
       toast({
         title: "Erro de conexão",

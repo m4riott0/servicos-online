@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -38,16 +38,15 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
   const [tokenEmail, setTokenEmail] = useState('');
   const [verificationMethod, setVerificationMethod] = useState<'sms' | 'email' | 'both'>('both');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [contactRegistered, setContactRegistered] = useState(false);
   const [tipoSolicitacao, setTipoSolicitacao] = useState<TipoSolicitacao>("celular");
 
   const { register, isAuthenticated, createAccount, registerContact, confirmContact, resendSMS } = useAuth();
   const { toast } = useToast();
 
+  console.log(step)
   if (isAuthenticated) {
     return <Navigate to="/Home" replace />;
   }
-
   // Se já tem conta mas não tem senha, pular para senha
   React.useEffect(() => {
     if (userInfo.temContaNoApp && userInfo.temSenhaCadastrada) {
@@ -67,7 +66,13 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
         await createAccount(cpfNumbers);
       }
 
-      setContactRegistered(true);
+      if (tipoSolicitacao === 'celular') {
+        const phoneNumbers = parseInt(celular.replace(/\D/g, ''));
+        await registerContact(cpfNumbers, 'phone', phoneNumbers.toString());
+      } else {
+        await registerContact(cpfNumbers, 'email', email);
+      }
+
       setStep('verification');
     } catch (error) {
       console.error('Error registering contact:', error);
@@ -98,23 +103,10 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
       if (tipoSolicitacao === 'celular') {
         tipo_contato = 'phone';
         contato = parseInt(celular.replace(/\D/g, '')).toString();
-      } 
-      console.log(contato)
-      console.log(tipo_contato)
+      }
+
       await confirmContact(cpfNumbers, tipo_contato, contato, token);
 
-
-      // Registrar contatos
-      if (celular) {
-        const phoneNumbers = parseInt(celular.replace(/\D/g, ''));
-        await registerContact(cpfNumbers, 'phone', phoneNumbers.toString());
-      }
-      
-      if (email) {
-        await registerContact(cpfNumbers, 'email', email);
-      }
-
-      
       setStep('password');
     } catch (error) {
       console.error('Error confirming contact:', error);
@@ -156,6 +148,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     setIsSubmitting(true);
     const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
     const success = await register(cpfNumbers, senha);
+    onBack()
     setIsSubmitting(false);
   };
 
@@ -183,7 +176,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               <label
                 className={`flex items-center gap-2 p-2 border rounded-lg 
                    ${!email ? "cursor-not-allowed bg-gray-100 text-gray-400" : "cursor-pointer hover:bg-gray-50"}`}
-                >
+              >
                 <input
                   type="radio"
                   name="tipoSolicitacao"
@@ -260,7 +253,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               className="input-medical text-center"
               maxLength={6}
             />
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               size="sm"
@@ -268,7 +261,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               className="w-full"
             >
               Reenviar
-            </Button>
+            </Button> */}
           </div>
 
 
@@ -400,8 +393,8 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step === 'contact' ? 'text-primary font-bold' : (contactRegistered ? 'text-primary' : 'text-muted-foreground')}`}>
-              {contactRegistered ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
+            <div className={`flex items-center ${step === 'contact' ? 'text-primary font-bold' : 'text-primary'}`}>
+              {step === 'contact' ? <div className="w-5 h-5 border-2 rounded-full" /> : <CheckCircle className="w-5 h-5" />}
               <span className="ml-2 text-sm">Contato</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
@@ -417,23 +410,24 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
           </div>
 
           {/* Form Content */}
-          {console.log(step)}
           {step === 'contact' && renderContactForm()}
           {step === 'verification' && renderVerificationForm()}
           {step === 'password' && renderPasswordForm()}
+         
+
 
           {/* Back Button */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={onBack}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {/* //TODO - Verificação "de" ou "do" ? */}
-              Voltar para verificação de CPF
-            </button>
-          </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {/* //TODO - Verificação "de" ou "do" ? */}
+                  Voltar para verificação de CPF
+                </button>
+              </div>
         </div>
       </div>
     </div>

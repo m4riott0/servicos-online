@@ -45,5 +45,5 @@ export const authService = {
       console.error('Erro na autenticação:', error);
       throw error;
     }
-  },
+  }
 };
