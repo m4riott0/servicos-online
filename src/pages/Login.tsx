@@ -71,27 +71,46 @@ export const Login: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      console.log("Submitting CPF:", cpfNumbers);
       const response = await verificaCPF(parseInt(cpfNumbers));
-      console.log("CPF verification response:", response);
 
       if (response?.sucesso) {
         setUserInfo(response);
-        localStorage.setItem("cpf", cpfNumbers);
-        if (response.email) localStorage.setItem("email", response.email);
-        if (response.celular) localStorage.setItem("celular", response.celular);
 
-        if (response.temContaNoApp && response.temSenhaCadastrada) {
-          setStep("login");
+        if (response.beneficiario) {
+          if (
+            response.sucesso &&
+            response.temContaNoApp &&
+            response.temSenhaCadastrada
+          ) {
+            setStep("login");
+          } else if (response.sucesso) {
+            setStep("register");
+          } else {
+            toast({
+              title: "CPF não encontrado",
+              description: response.erro || "CPF não cadastrado no sistema.",
+              variant: "destructive",
+            });
+          }
+
+          if (response && response.sucesso) {
+
+            localStorage.setItem("cpf", cpfNumbers);
+            if (response.email) localStorage.setItem("email", response.email);
+            if (response.celular) localStorage.setItem("celular", response.celular);
+
+            if (!response.temContaNoApp && !response.temSenhaCadastrada) {
+              setStep("register");
+            }
+          }
+
         } else {
-          setStep("register");
+          toast({
+            title: "Beneficiário não encontrado",
+            description: "Beneficiário não cadastrado no sistema.",
+            variant: "destructive",
+          });
         }
-      } else if (response) {
-        toast({
-          title: "Falha na verificação",
-          description: response.erro || "Não foi possível verificar o CPF.",
-          variant: "destructive",
-        });
       } else {
         toast({
           title: "CPF não encontrado",

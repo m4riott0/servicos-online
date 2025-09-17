@@ -15,6 +15,7 @@ import { CheckCircle, Lock } from "lucide-react";
 import { recoveryService } from "../services/recoveryService";
 import { useToast } from "../hooks/use-toast";
 import Logo from "../assets/bensaude.png";
+import { maskCelular, maskEmail } from "@/lib/utils";
 
 type TipoSolicitacao = "email" | "celular";
 type Step = "token" | "password" | "success";
@@ -25,20 +26,6 @@ const getSessionData = () => {
   const celular = localStorage.getItem("celular") || "";
   return { cpf, email, celular };
 };
-
-// Helpers para mascarar
-function maskEmail(email: string): string {
-  if (!email) return "";
-  const [user, domain] = email.split("@");
-  return user.substring(0, 3) + "****@" + domain;
-}
-
-function maskCelular(celular: string): string {
-  if (!celular) return "";
-  return celular.length >= 11
-    ? celular.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")
-    : celular;
-}
 
 export const PasswordRecovery: React.FC = () => {
   const { cpf, email, celular } = getSessionData();
