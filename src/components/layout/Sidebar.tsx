@@ -44,17 +44,7 @@ const navigation: NavItem[] = [
     name: "Guia Médico", 
     href: "/guia-medico",
     icon: Stethoscope,
-  },
-  {
-    name: "SOS Saúde",
-    href: "/sos",
-    icon: Shield,
-  },
-  {
-    name: "Ortopédico", 
-    href: "/ortopedico",
-    icon: Ribbon,
-  },
+  }
 ];
 
 export const Sidebar: React.FC = () => {

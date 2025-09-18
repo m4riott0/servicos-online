@@ -12,7 +12,7 @@ import { MedicalGuide } from "./pages/MedicalGuide";
 import { Authorizations } from "./pages/Authorizations";
 import { Financial } from "./pages/Financeiro";
 import { Comercial } from "./pages/Comercial";
-import { SOSService } from "./pages/SOSService";
+import { SOSService} from "./pages/SOSService";
 import { PasswordRecovery } from "./pages/PasswordRecovery";
 import NotFound from "./pages/NotFound";
 
@@ -52,10 +52,6 @@ const App = () => (
 
             <Route path="/comercial" element={<Layout />}>
               <Route index element={<Comercial />} />
-            </Route>
-
-            <Route path="/servicos/sos" element={<Layout />}>
-              <Route index element={<SOSService />} />
             </Route>
 
             <Route path="/recuperar-senha" element={<PublicLayout />}>
