@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { authService } from "../services/authService";
+import { apiClient } from "../services/apiClient";
 import { registerService } from "../services/registerService";
 import type { User, CPFVerificationResponse } from "../types/api";
 import { useToast } from "../hooks/use-toast";
@@ -331,6 +332,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Remove dados do usuário da sessão
   const logout = useCallback(() => {
     setUser(null);
+    apiClient.clearToken();
+    apiClient.renewToken();
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso.",
