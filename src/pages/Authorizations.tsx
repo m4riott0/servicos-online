@@ -32,6 +32,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/use-toast";
 import type { Authorization, Beneficiary } from "../types/api";
 
+
 export const Authorizations: React.FC = () => {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [authorizations, setAuthorizations] = useState<Authorization[]>([]);
@@ -50,6 +51,7 @@ export const Authorizations: React.FC = () => {
       try {
         const data = await authorizationService.getAuthorizations({
           perfilAutenticado: user.perfilAutenticado,
+          codigoBeneficiario: selectedBeneficiary
         });
         setAuthorizations(data);
       } catch (error) {
@@ -84,10 +86,11 @@ export const Authorizations: React.FC = () => {
       if (loadedBeneficiaries.length > 0) {
         const firstBeneficiaryCode = loadedBeneficiaries[0].codigo;
         setSelectedBeneficiary(firstBeneficiaryCode);
-
+        
         const loadedAuthorizations =
           await authorizationService.getAuthorizations({
             perfilAutenticado: user.perfilAutenticado,
+            codigoBeneficiario: firstBeneficiaryCode
           });
         setAuthorizations(loadedAuthorizations);
       } else {
@@ -138,7 +141,7 @@ export const Authorizations: React.FC = () => {
       aprovado: {
         variant: "default" as const,
         icon: CheckCircle,
-        color: "text-success",
+        color: "text-white",
       },
       pendente: {
         variant: "secondary" as const,
@@ -148,7 +151,7 @@ export const Authorizations: React.FC = () => {
       negado: {
         variant: "destructive" as const,
         icon: XCircle,
-        color: "text-destructive",
+        color: "text-white",
       },
     };
 
@@ -211,7 +214,7 @@ export const Authorizations: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4" />
                         <span>
-                          {beneficiary.nome} - {beneficiary.plano}
+                          {beneficiary.nome}{beneficiary?.plano ? " - " + beneficiary.plano : ""}
                         </span>
                       </div>
                     </SelectItem>
@@ -255,47 +258,45 @@ export const Authorizations: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 gap-6">
               {authorizations.map((auth) => (
-                <Card key={auth.id} className="card-medical">
+                <Card key={auth.numeroTransacao} className="card-medical">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">
-                          {auth.tipo}
+                        <CardTitle className="text-lg mb-2">                          
                         </CardTitle>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {new Date(auth.data).toLocaleDateString("pt-BR")}
+                              {new Date(auth.dataSolicitacao).toLocaleDateString("pt-BR")}
                             </span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <User className="h-4 w-4" />
-                            <span>{auth.beneficiario}</span>
+                            SOLICITADO POR: <span className="font-bold">{auth.prestadorSolicitante}</span>
                           </div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end space-y-2">
-                        {getStatusBadge(auth.status)}
+                        {getStatusBadge(auth.statusProcedimento)}
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
+
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        ID: {auth.id}
+                        N° TRANSAÇÃO: {auth.numeroTransacao}
                       </p>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver Detalhes
-                        </Button>
-                        {auth.status.toLowerCase() === "aprovado" && (
-                          <Button variant="medical" size="sm">
-                            <Download className="h-4 w-4 mr-2" />
-                            Baixar Guia
-                          </Button>
-                        )}
+                      
+                      <div className="flex items-center space-x-2">     
+                        {/* Procedimentos */}
+                        {auth.procedimentos.map((item) => (
+                          <p className="text-sm text-muted-foreground">
+                            PROCEDIMENTO: <b>{item.codigoProcedimento}</b><br/>
+                            DESCRIÇÃO: <b>{item.descricaoProcedimento}</b>
+                          </p>
+                        ))}                        
                       </div>
                     </div>
                   </CardContent>
@@ -304,7 +305,9 @@ export const Authorizations: React.FC = () => {
             </div>
           )}
         </div>
-      )}
+      )}      
     </div>
+
+    
   );
 };

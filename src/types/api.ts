@@ -146,14 +146,20 @@ export interface BeneficiariesRequest {
 
 export interface ListAuthorizationsRequest {
   perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string
+}
+
+export interface procedures {
+  codigoProcedimento: string;
+  descricaoProcedimento: string
 }
 
 export interface Authorization {
-  id: string;
-  tipo: string;
-  data: string;
-  status: string;
-  beneficiario: string;
+  numeroTransacao: string,
+  dataSolicitacao: string,
+  prestadorSolicitante: string, 
+  procedimentos: procedures[],  
+  statusProcedimento: string
 }
 
 //================================================================================================================== 
@@ -381,10 +387,10 @@ export interface User {
 export interface Beneficiary {
   codigo: string;
   nome: string;
-  cpf: number;
-  dataNascimento: string;
-  plano: string;
-  status: string;
+  cpf?: number;
+  dataNascimento?: string;
+  plano?: string;
+  status?: string;
 }
 
 export interface CreditCard {

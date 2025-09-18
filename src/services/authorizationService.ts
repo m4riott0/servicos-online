@@ -6,10 +6,12 @@ export const authorizationService = {
     req: ApiTypes.BeneficiariesRequest
   ): Promise<ApiTypes.Beneficiary[]> => {
     try {
-      const response = await apiClient.instance.post<
-        ApiTypes.ApiResponse<ApiTypes.Beneficiary[]>
-      >("/api/Autorizacoes/Beneficiarios", req);
-      return response.data?.dados || [];
+      const response = await apiClient.instance.post("/api/Autorizacoes/Beneficiarios", req);
+      return !response.data ? [] : response.data.map(item => ({
+        codigo: item.codigoBeneficiario,
+        nome: item.nome
+      }));
+
     } catch (error) {
       console.error("Erro ao buscar beneficiários:", error);
       throw error;
@@ -20,10 +22,8 @@ export const authorizationService = {
     req: ApiTypes.ListAuthorizationsRequest
   ): Promise<ApiTypes.Authorization[]> => {
     try {
-      const response = await apiClient.instance.post<
-        ApiTypes.ApiResponse<ApiTypes.Authorization[]>
-      >("/api/Autorizacoes/ListarAutorizacoes", req);
-      return response.data?.dados || [];
+      const response = await apiClient.instance.post("/api/Autorizacoes/ListarAutorizacoes", req);
+      return response.data.autorizacoes || [];
     } catch (error) {
       console.error("Erro ao buscar autorizações:", error);
       throw error;

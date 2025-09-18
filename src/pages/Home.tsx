@@ -30,20 +30,40 @@ export const Home: React.FC = () => {
 
     setIsLoadingData(true);
     try {
-      const [
-        loadedBeneficiaries,
-        loadedAuthorizations,
-        // A busca de parcelas foi removida conforme solicitado.
-      ] = await Promise.all([
-        authorizationService.getBeneficiaries({
-          perfilAutenticado: user.perfilAutenticado,
-        }),
-        authorizationService.getAuthorizations({
-          perfilAutenticado: user.perfilAutenticado,
-        }),
-      ]);
+      // const [
+      //   loadedBeneficiaries,
+      //   loadedAuthorizations,
+      //   // A busca de parcelas foi removida conforme solicitado.
+      // ] = await Promise.all([
+      //   authorizationService.getBeneficiaries({
+      //     perfilAutenticado: user.perfilAutenticado,
+      //   }),
+      //   authorizationService.getAuthorizations({
+      //     perfilAutenticado: user.perfilAutenticado,
+      //     codigoBeneficiario: 
+      //   }),
+      // ]);
 
-      setBeneficiaries(loadedBeneficiaries);
+      // setBeneficiaries(loadedBeneficiaries);
+      // setAuthorizations(loadedAuthorizations);
+
+      const loadedBeneficiaries = await authorizationService.getBeneficiaries({
+        perfilAutenticado: user.perfilAutenticado,
+      });
+
+      const beneficiario = loadedBeneficiaries[0]; 
+
+      if (!beneficiario) {
+        console.error("Nenhum beneficiário encontrado");
+        return;
+      }
+
+      const loadedAuthorizations = await authorizationService.getAuthorizations({
+        perfilAutenticado: user.perfilAutenticado,
+        codigoBeneficiario: beneficiario.codigo,
+      });
+
+      setBeneficiaries([beneficiario]); // opcional: manter como array
       setAuthorizations(loadedAuthorizations);
     } catch (error) {
       console.error("Error loading home data:", error);

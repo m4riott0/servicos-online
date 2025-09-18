@@ -55,7 +55,6 @@ export const Beneficiaries: React.FC = () => {
   }
 };
 
-
   const getStatusBadge = (status: string) => {
     const statusMap = {
       'ativo': { variant: 'default' as const, color: 'text-success' },
