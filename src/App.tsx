@@ -12,9 +12,10 @@ import { MedicalGuide } from "./pages/MedicalGuide";
 import { Authorizations } from "./pages/Authorizations";
 import { Financial } from "./pages/Financeiro";
 import { Comercial } from "./pages/Comercial";
-import { SOSService} from "./pages/SOSService";
 import { PasswordRecovery } from "./pages/PasswordRecovery";
 import NotFound from "./pages/NotFound";
+import { Beneficios } from "./pages/Beneficios";
+import { MedicinaPreventiva } from "./pages/MedicinaPreventiva";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,14 @@ const App = () => (
 
             <Route path="/recuperar-senha" element={<PublicLayout />}>
               <Route index element={<PasswordRecovery />} />
+            </Route>
+
+            <Route path="/beneficios" element={<Layout />}>
+              <Route index element={<Beneficios />} />
+            </Route>
+
+            <Route path="/medicina-preventiva" element={<Layout />}>
+              <Route index element={<MedicinaPreventiva />} />
             </Route>
             
             {/* Fallback */}

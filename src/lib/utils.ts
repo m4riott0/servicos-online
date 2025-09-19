@@ -18,3 +18,15 @@ export function maskCelular(celular: string): string {
     ? celular.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")
     : celular;
 }
+
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("pt-BR").format(date);
+}
+
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}

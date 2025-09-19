@@ -8,6 +8,7 @@ import {
   Shield,
   Ribbon,
   BadgeDollarSign,
+  Tag,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -44,6 +45,16 @@ const navigation: NavItem[] = [
     name: "Guia Médico", 
     href: "/guia-medico",
     icon: Stethoscope,
+  },
+  {
+    name: "Medicina Preventiva", 
+    href: "/medicina-preventiva",
+    icon: Shield,
+  },
+  {
+    name: "Clube de benefícios",
+    href: "/beneficios",
+    icon: Tag,
   }
 ];
 
