@@ -20,7 +20,7 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const navigation: NavItem[] = [
+export const navigation: NavItem[] = [
   {
     name: "Home",
     href: "/home",

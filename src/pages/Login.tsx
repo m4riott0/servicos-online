@@ -18,6 +18,8 @@ import { AuthLogin } from "./AuthLogin";
 import { AuthRegister } from "./AuthRegister";
 import type { CPFVerificationResponse } from "../types/api";
 import LoginHero from "../assets/login-hero.png";
+import Logo from "../assets/bensaude.png";
+import { useIsMobile } from "../hooks/use-mobile";
 
 type LoginStep = "cpf" | "login" | "register";
 
@@ -31,6 +33,7 @@ export const Login: React.FC = () => {
 
   const { verificaCPF, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   if (isAuthenticated) {
     return <Navigate to="/Home" replace />;
@@ -73,50 +76,38 @@ export const Login: React.FC = () => {
     try {
       const response = await verificaCPF(parseInt(cpfNumbers));
 
-      if (response?.sucesso) {
-        setUserInfo(response);
-
-        if (response.beneficiario) {
-          if (
-            response.sucesso &&
-            response.temContaNoApp &&
-            response.temSenhaCadastrada
-          ) {
-            setStep("login");
-          } else if (response.sucesso) {
-            setStep("register");
-          } else {
-            toast({
-              title: "CPF não encontrado",
-              description: response.erro || "CPF não cadastrado no sistema.",
-              variant: "destructive",
-            });
-          }
-
-          if (response && response.sucesso) {
-
-            localStorage.setItem("cpf", cpfNumbers);
-            if (response.email) localStorage.setItem("email", response.email);
-            if (response.celular) localStorage.setItem("celular", response.celular);
-
-            if (!response.temContaNoApp && !response.temSenhaCadastrada) {
-              setStep("register");
-            }
-          }
-
-        } else {
-          toast({
-            title: "Beneficiário não encontrado",
-            description: "Beneficiário não cadastrado no sistema.",
-            variant: "destructive",
-          });
-        }
-      } else {
+      if (!response || !response.sucesso) {
         toast({
           title: "CPF não encontrado",
-          description: "Erro na verificação do CPF.",
+          description: response?.erro || "Erro na verificação do CPF.",
           variant: "destructive",
         });
+        return;
+      }
+
+      if (!response.beneficiario) {
+        toast({
+          title: "Beneficiário não encontrado",
+          description: "Este CPF não pertence a um beneficiário ativo.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // CPF verificado com sucesso para um beneficiário
+      setUserInfo(response);
+      localStorage.setItem("cpf", cpfNumbers);
+      if (response.email) {
+        localStorage.setItem("email", response.email);
+      }
+      if (response.celular) {
+        localStorage.setItem("celular", response.celular);
+      }
+
+      if (response.temContaNoApp && response.temSenhaCadastrada) {
+        setStep("login");
+      } else {
+        setStep("register");
       }
     } catch (error) {
       console.error("Error verifying CPF:", error);
@@ -189,13 +180,13 @@ export const Login: React.FC = () => {
       {/* Right side - CPF Form */}
       <div className="flex items-center justify-center p-8 bg-section-hero">
         <div className="w-full max-w-md space-y-8">
-          {/* Header */}
-          <div className="text-center">
-            <div className="flex flex-col items-center mb-6 space-y-4 ">
-              <h1 className="text-3xl font-bold text-blue-500 mb-2">
-                Portal do Beneficiário
-              </h1>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
+            {isMobile && (
+              <img src={Logo} alt="Bensaúde Logo" className="h-12 w-auto " />
+            )}
+            <h1 className="text-3xl font-bold text-blue-500">
+              Portal do Beneficiário
+            </h1>
           </div>
 
           {/* CPF Form */}

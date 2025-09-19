@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
-import loginHero from '../assets/login-hero.png';
+import React, { useState } from "react";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { Eye, EyeOff, Lock, ArrowLeft } from "lucide-react";
+import { useToast } from "../hooks/use-toast";
+import loginHero from "../assets/login-hero.png";
+import Logo from "../assets/bensaude.png";
+import { useIsMobile } from "../hooks/use-mobile";
+
 
 interface AuthLoginProps {
   cpf: string;
@@ -17,16 +26,23 @@ interface AuthLoginProps {
     celular?: string;
     email?: string;
   };
-  onBack: () => void; 
+  onBack: () => void;
 }
 
-export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) => {
-  const [senha, setSenha] = useState('');
+export const AuthLogin: React.FC<AuthLoginProps> = ({
+  cpf,
+  userInfo,
+  onBack,
+}) => {
+  const [senha, setSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+
+
 
   if (isAuthenticated) {
     return <Navigate to="/Home" replace />;
@@ -34,7 +50,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!senha) {
       toast({
         title: "Campo obrigatório",
@@ -54,18 +70,18 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const cpfNumerico = cpf.replace(/\D/g, "");
-      console.log('Tentando login com CPF:', cpfNumerico, 'e senha:', senha);
+      console.log("Tentando login com CPF:", cpfNumerico, "e senha:", senha);
 
       const success = await login(parseInt(cpfNumerico), senha);
-      console.log('Resultado do login:', success);
+      console.log("Resultado do login:", success);
 
       if (!success) {
-        console.log('Login falhou - erro já tratado no contexto');
+        console.log("Login falhou - erro já tratado no contexto");
       } else {
-        console.log('Login bem-sucedido!');
+        console.log("Login bem-sucedido!");
       }
     } catch (err) {
       console.error("Erro inesperado no login:", err);
@@ -78,7 +94,9 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
       setIsSubmitting(false);
     }
   };
-{/* TODO: fazer modal para selecionar o contrato caso o cpf digitado tenha 2 contratos */}
+  {
+    /* TODO: fazer modal para selecionar o contrato caso o cpf digitado tenha 2 contratos */
+  }
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* lado esquerdo */}
@@ -94,11 +112,22 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
       <div className="flex items-center justify-center p-8 bg-section-hero">
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-blue-500">Bem-vindo de volta</h1>
-            <p className="text-muted-foreground mt-2">
-              Olá, <span className="font-semibold">{userInfo.nome.split(' ')[0]}</span>!
-            </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
+            {isMobile && (
+              <img src={Logo} alt="Bensaúde Logo" className="h-12 w-auto " />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-blue-500">
+                Bem-vindo de volta
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Olá,{" "}
+                <span className="font-semibold">
+                  {userInfo.nome.split(" ")[0]}
+                </span>
+                !
+              </p>
+            </div>
           </div>
 
           {/* Login */}
@@ -120,7 +149,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input
                       id="senha"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showPassword ? "text" : "password"}
                       placeholder="Digite sua senha"
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
@@ -135,7 +164,11 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:cursor-not-allowed"
                       disabled={isSubmitting}
                     >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -152,7 +185,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({ cpf, userInfo, onBack }) =
                       Entrando...
                     </>
                   ) : (
-                    'Entrar'
+                    "Entrar"
                   )}
                 </Button>
 

@@ -10,7 +10,7 @@ export const financeiroService = {
       { responseType: "blob" } 
     );
     return response.data;
-  },
+  }, 
 
 
   getCodigoBarras: async (req: ApiTypes.BarcodeRequest) => {
@@ -23,7 +23,7 @@ export const financeiroService = {
 
 
   getExtratoCoParticipacao: async (req: ApiTypes.CoParticipationExtractRequest) => {
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.FinancialExtract[]>>(
+    const response = await apiClient.instance.post(
       "/api/Financeiro/ExtratoCoParticipacao",
       req
     );
@@ -32,8 +32,9 @@ export const financeiroService = {
 
 
   getExtratoIRPF: async (req: ApiTypes.IRPFExtractRequest) => {
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.FinancialExtract[]>>(
-      "/api/Financeiro/ExtratoIRPF",
+    console.log("Payload enviado para ExtratoIRPF:", req);
+    const response = await apiClient.instance.post(
+      "/api/Financeiro/ExtratoIRPF", 
       req
     );
     return response.data?.dados || [];
@@ -41,7 +42,8 @@ export const financeiroService = {
 
 
   listarExtratoIRPF: async (req: ApiTypes.ListIRPFExtractRequest) => {
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.FinancialExtract[]>>(
+    console.log("Payload enviado para ListarExtratoIRPF:", req);
+    const response = await apiClient.instance.post(
       "/api/Financeiro/ListarExtratoIRPF",
       req
     );
@@ -50,7 +52,8 @@ export const financeiroService = {
 
 
   listarParcelas: async (req: ApiTypes.ListInstallmentsRequest) => {
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.MockInstallment[]>>(
+    console.log("Payload enviado para ListarParcelas:", req);
+    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.Installment[]>>(
       "/api/Financeiro/ListarParcelas",
       req
     );

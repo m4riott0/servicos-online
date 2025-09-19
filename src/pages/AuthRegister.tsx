@@ -1,16 +1,33 @@
-import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Eye, EyeOff, Lock, ArrowLeft, CheckCircle, Mail, Phone, MessageSquare } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
-import { useToast } from '../hooks/use-toast';
+import React, { useState } from "react";
+import { Navigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Label } from "../components/ui/label";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  ArrowLeft,
+  CheckCircle,
+  Mail,
+  Phone,
+  MessageSquare,
+} from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
+import { useToast } from "../hooks/use-toast";
 import LoginHero from "../assets/login-hero.png";
-import { maskCelular, maskEmail } from '@/lib/utils';
+import Logo from "../assets/bensaude.png";
+import { maskCelular, maskEmail } from "@/lib/utils";
+import { useIsMobile } from "../hooks/use-mobile";
 
 interface AuthRegisterProps {
   cpf: string;
@@ -26,39 +43,49 @@ interface AuthRegisterProps {
 
 type TipoSolicitacao = "email" | "celular";
 
-export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBack }) => {
-  const [step, setStep] = useState<'contact' | 'verification' | 'password'>('contact');
-  const [senha, setSenha] = useState('');
-  const [confirmSenha, setConfirmSenha] = useState('');
+export const AuthRegister: React.FC<AuthRegisterProps> = ({
+  cpf,
+  userInfo,
+  onBack,
+}) => {
+  const [step, setStep] = useState<"contact" | "verification" | "password">(
+    "contact"
+  );
+  const [senha, setSenha] = useState("");
+  const [confirmSenha, setConfirmSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [celular, setCelular] = useState(userInfo.celular || '');
-  const [email, setEmail] = useState(userInfo.email || '');
-  const [token, setToken] = useState('');
-  const [tokenEmail, setTokenEmail] = useState('');
-  const [verificationMethod, setVerificationMethod] = useState<'sms' | 'email' | 'both'>('both');
+  const [celular, setCelular] = useState(userInfo.celular || "");
+  const [email, setEmail] = useState(userInfo.email || "");
+  const [token, setToken] = useState("");
+  const [tokenEmail, setTokenEmail] = useState("");
+  const [verificationMethod, setVerificationMethod] = useState<
+    "sms" | "email" | "both"
+  >("both");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tipoSolicitacao, setTipoSolicitacao] = useState<TipoSolicitacao>("celular");
+  const [tipoSolicitacao, setTipoSolicitacao] =
+    useState<TipoSolicitacao>("celular");
 
-  const { register, isAuthenticated, createAccount, registerContact, confirmContact, resendSMS } = useAuth();
+  const {
+    register,
+    isAuthenticated,
+    createAccount,
+    registerContact,
+    confirmContact,
+    resendSMS,
+  } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
-  console.log(step)
+  console.log(step);
   if (isAuthenticated) {
     return <Navigate to="/Home" replace />;
   }
-  // Se já tem conta mas não tem senha, pular para senha
-  React.useEffect(() => {
-    if (userInfo.temContaNoApp && userInfo.temSenhaCadastrada) {
-      setStep('password');
-    }
-  }, [userInfo]);
-
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
 
     try {
       // Se não tem conta no app, criar primeiro
@@ -66,16 +93,16 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
         await createAccount(cpfNumbers);
       }
 
-      if (tipoSolicitacao === 'celular') {
-        const phoneNumbers = parseInt(celular.replace(/\D/g, ''));
-        await registerContact(cpfNumbers, 'phone', phoneNumbers.toString());
+      if (tipoSolicitacao === "celular") {
+        const phoneNumbers = parseInt(celular.replace(/\D/g, ""));
+        await registerContact(cpfNumbers, "phone", phoneNumbers.toString());
       } else {
-        await registerContact(cpfNumbers, 'email', email);
+        await registerContact(cpfNumbers, "email", email);
       }
 
-      setStep('verification');
+      setStep("verification");
     } catch (error) {
-      console.error('Error registering contact:', error);
+      console.error("Error registering contact:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -94,22 +121,21 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     }
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
 
     try {
-
       let contato = "email";
-      let tipo_contato: "phone" | "email" = 'email';
-      if (tipoSolicitacao === 'celular') {
-        tipo_contato = 'phone';
-        contato = parseInt(celular.replace(/\D/g, '')).toString();
+      let tipo_contato: "phone" | "email" = "email";
+      if (tipoSolicitacao === "celular") {
+        tipo_contato = "phone";
+        contato = parseInt(celular.replace(/\D/g, "")).toString();
       }
 
       await confirmContact(cpfNumbers, tipo_contato, contato, token);
 
-      setStep('password');
+      setStep("password");
     } catch (error) {
-      console.error('Error confirming contact:', error);
+      console.error("Error confirming contact:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -146,15 +172,19 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
     }
 
     setIsSubmitting(true);
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
     const success = await register(cpfNumbers, senha);
-    onBack()
-    setIsSubmitting(false);
+    if (success) {
+      // Após criar a senha, o usuário já tem conta e senha, então o fluxo de login normal deve ser seguido.
+      // onBack() limpa o estado e volta para a tela de CPF.
+      onBack();
+    }
+    setIsSubmitting(false); // Apenas desativa o loading se o registro falhar. Se for sucesso, a tela mudará.
   };
 
   //TODO - ver isso, se vai colocar contador, spinner. ou desabilitar depois de um tempo
   const handleResendSMS = async () => {
-    const cpfNumbers = parseInt(cpf.replace(/\D/g, ''));
+    const cpfNumbers = parseInt(cpf.replace(/\D/g, ""));
     await resendSMS(cpfNumbers);
   };
 
@@ -168,14 +198,16 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
       </CardHeader>
       <CardContent>
         <form onSubmit={handleContactSubmit} className="space-y-6">
-
           <div className="space-y-2">
-
             <Label>Selecione o método</Label>
             <div className="flex flex-col gap-2">
               <label
                 className={`flex items-center gap-2 p-2 border rounded-lg 
-                   ${!email ? "cursor-not-allowed bg-gray-100 text-gray-400" : "cursor-pointer hover:bg-gray-50"}`}
+                   ${
+                     !email
+                       ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                       : "cursor-pointer hover:bg-gray-50"
+                   }`}
               >
                 <input
                   type="radio"
@@ -186,12 +218,18 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                   disabled={!email}
                 />
                 <span>
-                  {email ? `E-mail: ${maskEmail(email)}` : "E-mail não disponível"}
+                  {email
+                    ? `E-mail: ${maskEmail(email)}`
+                    : "E-mail não disponível"}
                 </span>
               </label>
               <label
                 className={`flex items-center gap-2 p-2 border rounded-lg 
-                ${!celular ? "cursor-not-allowed bg-gray-100 text-gray-400" : "cursor-pointer hover:bg-gray-50"}`}
+                ${
+                  !celular
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                    : "cursor-pointer hover:bg-gray-50"
+                }`}
               >
                 <input
                   type="radio"
@@ -202,10 +240,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                   disabled={!celular}
                 />
                 <span>
-                  {celular ? `Celular: ${maskCelular(celular)}` : "Celular não disponível"}
+                  {celular
+                    ? `Celular: ${maskCelular(celular)}`
+                    : "Celular não disponível"}
                 </span>
               </label>
-
             </div>
           </div>
 
@@ -221,7 +260,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Processando...
               </>
             ) : (
-              'Continuar'
+              "Continuar"
             )}
           </Button>
         </form>
@@ -238,9 +277,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
         </CardDescription>
       </CardHeader>
       <CardContent>
-
         <form onSubmit={handleVerificationSubmit} className="space-y-6">
-
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               Informe o código enviado
@@ -264,7 +301,6 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
             </Button> */}
           </div>
 
-
           <Button
             type="submit"
             className="w-full"
@@ -277,7 +313,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Verificando...
               </>
             ) : (
-              'Validar Código'
+              "Validar Código"
             )}
           </Button>
         </form>
@@ -304,7 +340,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 id="senha"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Digite uma senha"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -316,7 +352,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -330,7 +370,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 id="confirmSenha"
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Digite a senha novamente"
                 value={confirmSenha}
                 onChange={(e) => setConfirmSenha(e.target.value)}
@@ -342,7 +382,11 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
@@ -359,7 +403,7 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
                 Criando conta...
               </>
             ) : (
-              'Criar Conta'
+              "Criar Conta"
             )}
           </Button>
         </form>
@@ -382,52 +426,90 @@ export const AuthRegister: React.FC<AuthRegisterProps> = ({ cpf, userInfo, onBac
       <div className="flex items-center justify-center p-8 bg-section-hero">
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-primary">
-              {step === 'password' ? 'Criar Senha' : 'Cadastro'}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Olá, <span className="font-semibold">{userInfo.nome.split(' ')[0]}</span>!
-            </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center sm:text-left">
+            {isMobile && (
+              <img src={Logo} alt="Bensaúde Logo" className="h-12 w-auto " />
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-primary">
+                {step === "password" ? "Criar Senha" : "Cadastro"}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Olá,{" "}
+                <span className="font-semibold">
+                  {userInfo.nome.split(" ")[0]}
+                </span>
+                !
+              </p>
+            </div>
           </div>
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center space-x-4">
-            <div className={`flex items-center ${step === 'contact' ? 'text-primary font-bold' : 'text-primary'}`}>
-              {step === 'contact' ? <div className="w-5 h-5 border-2 rounded-full" /> : <CheckCircle className="w-5 h-5" />}
+            <div
+              className={`flex items-center ${
+                step === "contact" ? "text-primary font-bold" : "text-primary"
+              }`}
+            >
+              {step === "contact" ? (
+                <div className="w-5 h-5 border-2 rounded-full" />
+              ) : (
+                <CheckCircle className="w-5 h-5" />
+              )}
               <span className="ml-2 text-sm">Contato</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
-            <div className={`flex items-center ${step === 'verification' ? 'text-primary font-bold' : (step === 'password' ? 'text-primary' : 'text-muted-foreground')}`}>
-              {step === 'password' ? <CheckCircle className="w-5 h-5" /> : <div className="w-5 h-5 border-2 rounded-full" />}
+            <div
+              className={`flex items-center ${
+                step === "verification"
+                  ? "text-primary font-bold"
+                  : step === "password"
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {step === "password" ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <div className="w-5 h-5 border-2 rounded-full" />
+              )}
               <span className="ml-2 text-sm">Verificação</span>
             </div>
             <div className="w-8 h-0.5 bg-border"></div>
-            <div className={`flex items-center ${step === 'password' ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+            <div
+              className={`flex items-center ${
+                step === "password"
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground"
+              }`}
+            >
               <div className="w-5 h-5 border-2 rounded-full" />
               <span className="ml-2 text-sm">Senha</span>
             </div>
           </div>
 
           {/* Form Content */}
-          {step === 'contact' && renderContactForm()}
-          {step === 'verification' && renderVerificationForm()}
-          {step === 'password' && renderPasswordForm()}
-         
-
+          {step === "contact" && renderContactForm()}
+          {step === "verification" && renderVerificationForm()}
+          {step === "password" && renderPasswordForm()}
 
           {/* Back Button */}
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {/* //TODO - Verificação "de" ou "do" ? */}
-                  Voltar para verificação de CPF
-                </button>
-              </div>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                if (step === "verification") {
+                  setStep("contact");
+                } else {
+                  onBack();
+                }
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center w-full"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,34 @@ export interface GenerateTokenRequest {
   senha: string;
 }
 
+export interface Beneficiary {
+  codigo: string;
+  nome: string;
+  cpf?: number;
+  dataNascimento?: string;
+  plano?: string;
+  status?: string;
+}
+
+export interface ApiResponse<T = any> {
+  sucesso: boolean;
+  dados?: T;
+  erro?: string;
+  mensagem?: string;
+}
+
+export interface User {
+  id: string;
+  nome: string;
+  cpf: number;
+  email: string;
+  celular: string;
+  perfilAutenticado: PerfilAutenticado;
+  codigoPlano?: number;
+  codigoContrato?: number;
+  isBeneficiary?: boolean;
+}
+
 //================================================================================================================== 
 //                                        Login types 
 //================================================================================================================== 
@@ -125,7 +153,7 @@ export interface MedicalGuideCity {
 
 export interface MedicalGuideSpecialty {
   id: number;
-  nome: string;
+  nome: string; 
 }
 
 export interface MedicalGuideProvider {
@@ -140,13 +168,9 @@ export interface MedicalGuideProvider {
 //================================================================================================================== 
 //                                        Autorizações types 
 //================================================================================================================== 
-export interface BeneficiariesRequest {
-  perfilAutenticado: PerfilAutenticado;
-}
 
 export interface ListAuthorizationsRequest {
-  perfilAutenticado: PerfilAutenticado;
-  codigoBeneficiario: string
+  perfilAutenticado: PerfilAutenticado
 }
 
 export interface procedures {
@@ -161,7 +185,6 @@ export interface Authorization {
   procedimentos: procedures[],  
   statusProcedimento: string
 }
-
 //================================================================================================================== 
 //                                        Medicina preventiva types 
 //================================================================================================================== 
@@ -263,49 +286,20 @@ export interface DownloadBoletoRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
-export interface DeleteCreditCardRequest {
-  perfilAutenticado: PerfilAutenticado;
-  customerId: string;
-  token: string;
-}
-
-export interface ListCreditCardsRequest {
-  perfilAutenticado: PerfilAutenticado;
-  codigoMensalidade?: number;
-  customerId?: string;
-  tokenCartao?: string;
-}
-
-export interface TokenizeCreditCardRequest {
-  perfilAutenticado: PerfilAutenticado;
-  apelidoCartao: string;
-  primeiroNome: string;
-  ultimoNome: string;
-  numeroCartaoCredito: number;
-  mesExpiracao: number;
-  anoExpiracao: number;
-  nomeTitularCartao: string;
-  enderecoCobranca1: string;
-  enderecoCobranca2: string;
-  cidadeCobranca: string;
-  unidadeFederalCobranca: string;
-  cepCobranca: number;
-  paisCobranca: string;
-  telefoneCobranca: number;
-  emailCobranca: string;
-}
-
 export interface BarcodeRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
 export interface CoParticipationExtractRequest {
   perfilAutenticado: PerfilAutenticado;
+  anoCompetencia: number;
+  mesCompetencia: number;
 }
+
 
 export interface IRPFExtractRequest {
   perfilAutenticado: PerfilAutenticado;
-  ano: number;
+  ano?: number;
 }
 
 export interface ListIRPFExtractRequest {
@@ -316,102 +310,21 @@ export interface ListInstallmentsRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
-export interface ApiResponse<T = any> {
-  sucesso: boolean;
-  dados?: T;
-  erro?: string;
-  mensagem?: string;
-}
-
-export interface MockBeneficiary {
-  codigo: string;
-  nome: string;
-  cpf: number;
-  dataNascimento: string;
-  plano: string;
-  status: string;
-}
-
-export interface MockAuthorization {
-  id: string;
-  tipo: string;
-  data: string;
-  status: string;
-  beneficiario: string;
-}
-
-export interface MockMedicalProvider {
-  id: number;
-  nome: string;
-  especialidade: string;
-  cidade: string;
-  endereco: string;
-  telefone: string;
-}
-
-export interface MockInstallment {
-  codigo: number;
-  vencimento: string;
-  valor: number;
-  status: string;
-  codigoBarras?: string;
-}
-
-export interface MockCreditCard {
-  id: string;
-  apelido: string;
-  numeroMascarado: string;
-  bandeira: string;
-  titular: string;
-}
-
-export interface MockFinancialExtract {
-  periodo: string;
-  valor: number;
-  tipo: string;
-  descricao: string;
-}
-
-export interface User {
-  id: string;
-  nome: string;
-  cpf: number;
-  email: string;
-  celular: string;
-  perfilAutenticado: PerfilAutenticado | null;
-  codigoPlano?: number;
-  codigoContrato?: number;
-  isBeneficiary?: boolean;
-}
-
-export interface Beneficiary {
-  codigo: string;
-  nome: string;
-  cpf?: number;
-  dataNascimento?: string;
-  plano?: string;
-  status?: string;
-}
-
-export interface CreditCard {
-  id: string;
-  apelido: string;
-  numeroMascarado: string;
-  bandeira: string;
-  titular: string;
-}
 
 export interface Installment {
-  codigo: number;
+  codigoMensalidade: string;
+  plano: number;
+  contrato: number;
+  contratoInterno: string;
+  competencia: string;
+  mescompetencia: number;
+  anocompetencia: number;
+  tipoReceita: string;
   vencimento: string;
   valor: number;
+  dataEmissao: string;
   status: string;
-  codigoBarras?: string;
-}
-
-export interface FinancialExtract {
-  periodo: string;
-  valor: number;
-  tipo: string;
-  descricao: string;
+  valorMulta: number;
+  valorJuros: number;
+  valorCoparticipacao: number;
 }
