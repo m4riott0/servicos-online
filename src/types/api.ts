@@ -146,23 +146,55 @@ export interface ChangePasswordRequest {
 //================================================================================================================== 
 //                                        Guia médico types 
 //================================================================================================================== 
-export interface MedicalGuideCity {
-  id: number;
-  nome: string;
+export interface MedicalGuideCity {  
+  codigo: number,
+  nome: string,
+  estado: string
 }
 
 export interface MedicalGuideSpecialty {
-  id: number;
-  nome: string; 
+  codigo: number;
+  nome: string;
+}
+export interface ServiceLocation {
+  bairro: string,
+  cdLocalAtendimento: number,
+  cep: number,
+  cidade: string,
+  cnpj: string,
+  fone: string,
+  nomeFantasia: string,
+  razaoSocial: string,
+  rua: string,
+  site: string,
+  tipoEstabelecimento: string,
+  uf: string
+}
+
+export interface selos {
+  codigo: string,
+  nome: string
 }
 
 export interface MedicalGuideProvider {
-  id: number;
-  nome: string;
-  especialidade: string;
-  cidade: string;
-  endereco: string;
-  telefone: string;
+  codigo: number,
+  locaisAtendimento: ServiceLocation[],
+  nome: string,
+  nroRegistro: string,
+  selos: selos[],
+  tipoRegistro: number
+}
+
+export interface ProviderRequest {
+  codigoEspecialidade?: number;
+  codigoCidade?: number;
+  nomeCredenciado?: string;
+  codigoLocalAtendimento?: number;
+  nomeFantasia?: string;
+  razaoSocial?: string;
+  cpfCnpj?: number;
+  crm?: string;
+  somenteOdonto?: boolean
 }
 
 //================================================================================================================== 

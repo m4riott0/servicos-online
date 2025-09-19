@@ -3,8 +3,8 @@ import type * as ApiTypes from '../types/api';
 export const medicalService = {
   getMedicalCities: async (): Promise<ApiTypes.MedicalGuideCity[]> => {
     try {
-      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideCity[]>>('/api/GuiaMedico/Cidades');
-      return response.data?.dados || [];
+      const response = await apiClient.instance.get('/api/GuiaMedico/Cidades');
+      return response.data || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
     }
@@ -12,17 +12,17 @@ export const medicalService = {
 
   getMedicalSpecialties: async (): Promise<ApiTypes.MedicalGuideSpecialty[]> => {
     try {
-      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideSpecialty[]>>('/api/GuiaMedico/Especialidades');
-      return response.data?.dados || [];
+      const response = await apiClient.instance.get('/api/GuiaMedico/Especialidades');
+      return response.data || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
     }
   },
 
-  getMedicalProviders: async (): Promise<ApiTypes.MedicalGuideProvider[]> => {
+  getMedicalProviders: async (req: ApiTypes.ProviderRequest): Promise<ApiTypes.MedicalGuideProvider[]> => {
     try {
-      const response = await apiClient.instance.get<ApiTypes.ApiResponse<ApiTypes.MedicalGuideProvider[]>>('/api/GuiaMedico/Prestadores');
-      return response.data?.dados || [];
+      const response = await apiClient.instance.get('/api/GuiaMedico/Prestadores', { params: req });
+      return response.data[0]['prestadores'] || [];
     } catch (error) {
       console.warn('Chamada da API falhou, usando dados simulados:', error);
     }

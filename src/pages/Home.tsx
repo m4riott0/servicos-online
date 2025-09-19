@@ -80,12 +80,14 @@ export const Home: React.FC = () => {
 
   const stats = useMemo(() => {
     const pendingAuthorizations = authorizations.filter(
-      (auth) => auth.status.toLowerCase() === "pendente"
+      (auth) => auth.statusProcedimento.toLowerCase() === "pendente"
     ).length;
 
-    const activeBeneficiaries = beneficiaries.filter(
-      (b) => b.status.toLowerCase() === "ativo"
-    ).length;
+    // const activeBeneficiaries = beneficiaries.filter(
+    //   (b) => b.status.toLowerCase() === "ativo"
+    // ).length;
+
+    const activeBeneficiaries = beneficiaries.length
 
     return [
       {
@@ -96,7 +98,7 @@ export const Home: React.FC = () => {
         link: "/authorizations",
       },
       {
-        title: "Beneficiários Ativos",
+        title: "Beneficiários depedentes",
         value: activeBeneficiaries.toString(),
         icon: Users,
         color: "text-success",
