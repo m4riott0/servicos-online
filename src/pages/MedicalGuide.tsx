@@ -391,7 +391,6 @@ export const MedicalGuide: React.FC = () => {
                       <p><span className="font-medium">Site:</span> {provider.locaisAtendimento[0].site}</p>
 
                       {/* Selos */}
-                      {/* //TODO - Ajustar a logica para os selos certos. os codigos do selo que retorna da api não comrresponde com a dos arquivos  */}
                       <div className="mt-4">
                         <p className="font-medium">Selos:</p>
                         <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
