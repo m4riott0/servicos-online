@@ -3,6 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { Footer } from './Footer';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -27,22 +28,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <div className="flex h-full">
-        {!isMobile && <Sidebar />}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {children || <Outlet />}
-        </main>
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex-grow">
+        <Header />
+        <div className="flex h-full">
+          {!isMobile && <Sidebar />}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            {children || <Outlet />}
+          </main>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
 
 export const PublicLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-background">
-      {children || <Outlet />}
+    <div className="min-h-screen flex flex-col bg-background">
+      <main className="flex-grow">{children || <Outlet />}</main>
+      <Footer />
     </div>
   );
 };
