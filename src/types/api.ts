@@ -32,12 +32,18 @@ export interface User {
   perfilAutenticado: PerfilAutenticado;
   codigoPlano?: number;
   codigoContrato?: number;
-  isBeneficiary?: boolean;
+  tipoPerfil?: string;
 }
 
-//================================================================================================================== 
-//                                        Login types 
-//================================================================================================================== 
+export interface Params {
+  codigoMensalidade: string;
+  anoCompetencia: number;
+  mesCompetencia: number;
+}
+
+//==================================================================================================================
+//                                        Login types
+//==================================================================================================================
 export interface CPFVerificationRequest {
   cpf: number;
 }
@@ -68,13 +74,47 @@ export interface AuthenticationRequest {
 
 export interface AuthResponse {
   sucesso: boolean;
-  codigoSessao?: string;
-  nome?: string;
-  cpf?: number;
-  email?: string;
-  celular?: string;
   erro?: string;
+
+  codigoSessao?: number;
+  nome?: string;
+  cpf?: string;
+  dataNascimento?: string; 
+  celular?: string;
+  tipoPerfil?: string;
+  codigoBeneficiario?: string;
+  email?: string;
+  dataConfirmacaoEmail?: string; 
+  permitirValidacaoToken?: boolean;
+
+  produtos?: {
+    nome: string;
+    codigoAns: string;
+    dataInicioVigencia: string; 
+    produtoPrincipal: boolean;
+    coparticipativo: boolean;
+    nomeEmpresa: string;
+    nomeEmpresaAssociada: string;
+  }[];
+
+  acessorios?: {
+    nome: string;
+    codigoAcessorio: string;
+  }[];
+
+  beneficiariosAssociados?: {
+    nome: string;
+    cpf: string;
+    codigoMatricula: string;
+    codigoBeneficiario: string;
+    dataNascimento: string; 
+    padraoConforto: string;
+    permitirValidacaoToken: boolean;
+  }[];
+  habilitaPix?: boolean;
+  habilitaCartao?: boolean;
 }
+
 
 export interface AccountProfilesRequest {
   cpf: number;
@@ -90,9 +130,9 @@ export interface AccountProfile {
   perfilAutenticado?: PerfilAutenticado;
 }
 
-//================================================================================================================== 
-//                                        Cadastro types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Cadastro types
+//==================================================================================================================
 export interface CreateAccountRequest {
   cpf: number;
 }
@@ -120,9 +160,9 @@ export interface RegisterPasswordRequest {
   senha: string;
 }
 
-//================================================================================================================== 
-//                                        Esqueci minha senha types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Esqueci minha senha types
+//==================================================================================================================
 export interface RecoverPasswordRequest {
   cpf: number;
   tipoSolicitacao: string;
@@ -143,13 +183,13 @@ export interface ChangePasswordRequest {
   confirmacaoSenha: string;
 }
 
-//================================================================================================================== 
-//                                        Guia médico types 
-//================================================================================================================== 
-export interface MedicalGuideCity {  
-  codigo: number,
-  nome: string,
-  estado: string
+//==================================================================================================================
+//                                        Guia médico types
+//==================================================================================================================
+export interface MedicalGuideCity {
+  codigo: number;
+  nome: string;
+  estado: string;
 }
 
 export interface MedicalGuideSpecialty {
@@ -157,32 +197,32 @@ export interface MedicalGuideSpecialty {
   nome: string;
 }
 export interface ServiceLocation {
-  bairro: string,
-  cdLocalAtendimento: number,
-  cep: number,
-  cidade: string,
-  cnpj: string,
-  fone: string,
-  nomeFantasia: string,
-  razaoSocial: string,
-  rua: string,
-  site: string,
-  tipoEstabelecimento: string,
-  uf: string
+  bairro: string;
+  cdLocalAtendimento: number;
+  cep: number;
+  cidade: string;
+  cnpj: string;
+  fone: string;
+  nomeFantasia: string;
+  razaoSocial: string;
+  rua: string;
+  site: string;
+  tipoEstabelecimento: string;
+  uf: string;
 }
 
 export interface selos {
-  codigo: string,
-  nome: string
+  codigo: string;
+  nome: string;
 }
 
 export interface MedicalGuideProvider {
-  codigo: number,
-  locaisAtendimento: ServiceLocation[],
-  nome: string,
-  nroRegistro: string,
-  selos: selos[],
-  tipoRegistro: number
+  codigo: number;
+  locaisAtendimento: ServiceLocation[];
+  nome: string;
+  nroRegistro: string;
+  selos: selos[];
+  tipoRegistro: number;
 }
 
 export interface ProviderRequest {
@@ -194,36 +234,35 @@ export interface ProviderRequest {
   razaoSocial?: string;
   cpfCnpj?: number;
   crm?: string;
-  somenteOdonto?: boolean
+  somenteOdonto?: boolean;
 }
 
-//================================================================================================================== 
-//                                        Autorizações types 
-//================================================================================================================== 
-
+//==================================================================================================================
+//                                        Autorizações types
+//==================================================================================================================
 export interface ListBeneficiariesRequest {
-  perfilAutenticado: PerfilAutenticado
+  perfilAutenticado: PerfilAutenticado;
 }
 export interface ListAuthorizationsRequest {
-  perfilAutenticado: PerfilAutenticado,
-  codigoBeneficiario: string
+  perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string;
 }
 
 export interface procedures {
   codigoProcedimento: string;
-  descricaoProcedimento: string
+  descricaoProcedimento: string;
 }
 
 export interface Authorization {
-  numeroTransacao: string,
-  dataSolicitacao: string,
-  prestadorSolicitante: string, 
-  procedimentos: procedures[],  
-  statusProcedimento: string
+  numeroTransacao: string;
+  dataSolicitacao: string;
+  prestadorSolicitante: string;
+  procedimentos: procedures[];
+  statusProcedimento: string;
 }
-//================================================================================================================== 
-//                                        Medicina preventiva types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Medicina preventiva types
+//==================================================================================================================
 export interface PreventiveMedicineRequest {
   cpf: number;
   nome: string;
@@ -233,16 +272,16 @@ export interface PreventiveMedicineRequest {
   programa: string;
 }
 
-//================================================================================================================== 
-//                                        Odonto types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Odonto types
+//==================================================================================================================
 export interface OdontoInterestRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
-//================================================================================================================== 
-//                                        Venda types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Venda types
+//==================================================================================================================
 export interface InitialContactRequest {
   nome: string;
   cpf: number;
@@ -271,9 +310,9 @@ export interface QuestionaryRequest {
   cpf: number;
 }
 
-//================================================================================================================== 
-//                                        SOS types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        SOS types
+//==================================================================================================================
 export interface SOSTermAcceptanceRequest {
   perfilAutenticado: PerfilAutenticado;
   codigoMatriculasBeneficiariosAlvo: string[];
@@ -293,16 +332,17 @@ export interface SOSSendSMSRequest {
   codigoMatriculasBeneficiariosAlvo: string[];
 }
 
-//================================================================================================================== 
-//                                        Ortopédico types 
-//================================================================================================================== 
+//==================================================================================================================
+//                                        Ortopédico types
+//==================================================================================================================
 export interface OrthopedicTermAcceptanceRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoMatriculasBeneficiariosAlvo: string[];
+  codigoMensalidade: number;
 }
 
 export interface OrthopedicBeneficiariesRequest {
   perfilAutenticado: PerfilAutenticado;
+  codigoMensalidade: string;
 }
 
 export interface OrthopedicConfirmContractRequest {
@@ -315,52 +355,52 @@ export interface OrthopedicSendSMSRequest {
   codigoMatriculasBeneficiariosAlvo: string[];
 }
 
-//================================================================================================================== 
-//                                        Financeiro types 
-//================================================================================================================== 
-export interface DownloadBoletoRequest {
-  perfilAutenticado: PerfilAutenticado;
+//==================================================================================================================
+//                                        Financeiro types
+//==================================================================================================================
+export interface BarcodeRequest {
+  PerfilAutenticado: PerfilAutenticado;
+  codigoMensalidade: string;
 }
 
-export interface BarcodeRequest {
-  perfilAutenticado: PerfilAutenticado;
+export interface DownloadBoletoRequest {
+  PerfilAutenticado: PerfilAutenticado;
+  codigoMensalidade: string;
 }
 
 export interface CoParticipationExtractRequest {
-  perfilAutenticado: PerfilAutenticado;
-  anoCompetencia: number;
-  mesCompetencia: number;
+  PerfilAutenticado: PerfilAutenticado;
+  anoCompetencia?: number;
+  mesCompetencia?: number;
 }
 
-
 export interface IRPFExtractRequest {
-  perfilAutenticado: PerfilAutenticado;
+  PerfilAutenticado: PerfilAutenticado;
   ano?: number;
 }
 
 export interface ListIRPFExtractRequest {
-  perfilAutenticado: PerfilAutenticado;
+  PerfilAutenticado: PerfilAutenticado;
 }
 
 export interface ListInstallmentsRequest {
-  perfilAutenticado: PerfilAutenticado;
+  PerfilAutenticado: PerfilAutenticado;
 }
-
 
 export interface Installment {
   codigoMensalidade: string;
   plano: number;
   contrato: number;
   contratoInterno: string;
-  competencia: string;
-  mescompetencia: number;
-  anocompetencia: number;
-  tipoReceita: string;
-  vencimento: string;
   valor: number;
-  dataEmissao: string;
+  vencimento: string;
   status: string;
   valorMulta: number;
   valorJuros: number;
   valorCoparticipacao: number;
+  competencia?: string;
+  mescompetencia?: number;
+  anocompetencia?: number;
+  tipoReceita?: string;
+  dataEmissao?: string;
 }

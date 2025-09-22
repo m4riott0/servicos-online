@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -15,12 +15,23 @@ import {
   TabsTrigger,
 } from "../components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { Input } from "../components/ui/input";
+import { useToast } from "../hooks/use-toast";
+import { useIsMobile } from "../hooks/use-mobile";
 import {
   CreditCard,
   FileText,
@@ -29,18 +40,189 @@ import {
   DollarSign,
   CheckCircle,
   Clock,
-  Plus,
-  Trash2,
-  Eye,
+  Barcode,
+  Copy,
+  QrCode,
 } from "lucide-react";
+import { financeiroService } from "../services/financeiroService";
+import * as ApiTypes from "../types/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Financial: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const [loading, setLoading] = useState(true);
+  const [parcelas, setParcelas] = useState<ApiTypes.Installment[]>([]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [barcode, setBarcode] = useState("");
+  const [selectedInvoice, setSelectedInvoice] =
+    useState<ApiTypes.Installment | null>(null);
+  const [copartModalOpen, setCopartModalOpen] = useState(false);
+  const [coparticipacao, setCoparticipacao] = useState<any[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>(
+    (currentYear - 1).toString()
+  );
+  const [irpfData, setIrpfData] = useState<any[]>([]);
+
+  const { user } = useAuth();
+
+  const { toast } = useToast();
+
+  // Carregar parcelas
+  useEffect(() => {
+    const fetchParcelas = async () => {
+      if (!user?.perfilAutenticado) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const dados = await financeiroService.listarParcelas({
+          PerfilAutenticado: user.perfilAutenticado,
+        });
+        setParcelas(dados);
+        console.log("Estado 'parcelas' atualizado:", dados);
+      } catch (error) {
+        console.error("Erro ao buscar parcelas:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchParcelas();
+  }, [user]);
+
+  // Listar IRPF
+  useEffect(() => {
+    const fetchIrpfData = async () => {
+      if (!user?.perfilAutenticado) {
+        return;
+      }
+      try {
+        const dados = await financeiroService.listarExtratoIRPF({
+          PerfilAutenticado: user.perfilAutenticado,
+        });
+        setIrpfData(dados);
+      } catch (err) {
+        console.error("Erro ao buscar extratos IRPF:", err);
+      }
+    };
+    fetchIrpfData();
+  }, [user]);
+
+  // Baixar IRPF
+  const handleDownloadIRPF = async () => {
+    if (!user?.perfilAutenticado) return;
+    try {
+      const blob = await financeiroService.getExtratoIRPF({
+        PerfilAutenticado: user?.perfilAutenticado,
+        ano: parseInt(selectedYear, 10),
+      });
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `informe-irpf-${selectedYear}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast({
+        title: "Download Iniciado",
+        description: `O informe de IRPF para o ano de ${selectedYear} está sendo baixado.`,
+      });
+    } catch (err) {
+      console.error("Erro ao baixar extrato IRPF:", err);
+    }
+  };
+
+  // Abrir pagamento e buscar código de barras
+  const handlePayClick = async (invoice: ApiTypes.Installment) => {
+    if (!user?.perfilAutenticado) return;
+    try {
+      const codigo = await financeiroService.getCodigoBarras({
+        PerfilAutenticado: user?.perfilAutenticado,
+        codigoMensalidade: invoice.codigoMensalidade,
+      });
+      setBarcode(codigo?.codigoBarras || "");
+      setSelectedInvoice(invoice);
+      setIsPaymentModalOpen(true);
+    } catch (err) {
+      console.error("Erro ao buscar código de barras:", err);
+    }
+  };
+
+  // baixar boleto
+  const handleDownloadBoleto = async (invoice?: ApiTypes.Installment) => {
+    const invoiceToDownload = invoice || selectedInvoice;
+    if (!invoiceToDownload || !user?.perfilAutenticado) return;
+    try {
+      const blob = await financeiroService.baixarBoleto({
+        PerfilAutenticado: user?.perfilAutenticado,
+        codigoMensalidade: invoiceToDownload.codigoMensalidade,
+      });
+
+      const prefixo = invoiceToDownload.status === "Pago" ? "recibo" : "boleto";
+      const mes = String(invoiceToDownload.mescompetencia || "").padStart(
+        2,
+        "0"
+      );
+      const ano = invoiceToDownload.anocompetencia;
+
+      const nomeArquivo =
+        mes && ano
+          ? `${prefixo}-${mes}-${ano}.pdf`
+          : `${prefixo}-${invoiceToDownload.codigoMensalidade}.pdf`;
+
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", nomeArquivo);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Erro ao baixar boleto:", err);
+    }
+  };
+
+  // Copiar código de barras
+  const handleCopyBarcode = () => {
+    if (!barcode) return;
+    navigator.clipboard.writeText(barcode.replace(/\s/g, ""));
+    toast({
+      title: "Código de Barras Copiado!",
+      description:
+        "O código de barras foi copiado para a área de transferência.",
+    });
+    setIsPaymentModalOpen(false);
+  };
+
+  // Extrato de Coparticipação
+  const handleExtratoCoPart = async (invoice: ApiTypes.Installment) => {
+    if (!user?.perfilAutenticado) return;
+
+    try {
+      const extrato = await financeiroService.getExtratoCoParticipacao({
+        PerfilAutenticado: user?.perfilAutenticado,
+        anoCompetencia: invoice.anocompetencia,
+        mesCompetencia: invoice.mescompetencia,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([extrato]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "extrato_coparticipacao.pdf"); 
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      toast({
+        title: "Erro",
+        description: "Você não possui uma conta coparticipativa",
+        variant: "destructive",
+      }),
+      console.error("Erro ao consultar extrato:", err);
+    }
+  };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
@@ -55,213 +237,241 @@ export const Financial: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="installments" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="installments">Parcelas</TabsTrigger>
-          <TabsTrigger value="cards">Cartões</TabsTrigger>
-          <TabsTrigger value="extracts">Extratos</TabsTrigger>
-          <TabsTrigger value="boletos">Boletos</TabsTrigger>
+      <Tabs defaultValue="invoices" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="invoices">Faturas e Boletos</TabsTrigger>
+          <TabsTrigger value="irpf">Imposto de Renda</TabsTrigger>
         </TabsList>
 
-        {/* Installments Tab */}
-        <TabsContent value="installments" className="space-y-6">
+        <TabsContent value="invoices" className="space-y-6">
           <Card className="card-medical">
             <CardHeader>
-              <CardTitle>Parcelas dos ultimos 12 meses</CardTitle>
+              <CardTitle>Parcelas dos últimos 12 meses</CardTitle>
               <CardDescription>
                 Visualize e gerencie suas mensalidades
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-primary" />
+                {parcelas.map((p) => (
+                  <div
+                    key={p.codigoMensalidade}
+                    className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <DollarSign className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {p.valor.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Vencimento:{" "}
+                          {p.vencimento
+                            ? new Date(p.vencimento).toLocaleDateString()
+                            : "-"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">R$ 250,00</p>
-                      <p className="text-sm text-muted-foreground">
-                        Vencimento: 10/09/2025
-                      </p>
+                    <div className="flex items-center space-x-1.5">
+                      {p.status === "Pago" ? (
+                        <Badge
+                          variant="outline"
+                          className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Pago</span>
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
+                        >
+                          <Clock className="h-3 w-3" />
+                          <span>Em Aberto</span>
+                        </Badge>
+                      )}
+                      {p.status === "Pago" ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleDownloadBoleto(p)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Ver Recibo
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handlePayClick(p)}
+                        >
+                          <Barcode className="h-4 w-4 mr-2" />
+                          Pagar
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExtratoCoPart(p)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Extrato Copart
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <Badge
-                      variant="default"
-                      className="flex items-center space-x-1"
-                    >
-                      <Clock className="h-3 w-3 text-yellow-600" />
-                      <span className="capitalize">Pago</span>
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <DollarSign className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">R$ 250,00</p>
-                      <p className="text-sm text-muted-foreground">
-                        Vencimento: 10/09/2025
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Badge
-                      variant="default"
-                      className="flex items-center space-x-1"
-                    >
-                      <CheckCircle className="h-3 w-3 text-blue-600" />
-                      <span className="capitalize">Pago</span>
-                    </Badge>
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Cards Tab */}
-        <TabsContent value="cards" className="space-y-6">
-          <Card className="card-medical">
-            <CardHeader>
-              <CardTitle>Cartões de Crédito</CardTitle>
-              <CardDescription>
-                Gerencie seus cartões para pagamentos recorrentes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-medium mb-2">
-                  Disponível em breve
-                </h3>
-                <p className="text-muted-foreground">
-                  Esta funcionalidade está em desenvolvimento e estará
-                  disponível em breve.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Extracts Tab */}
-        <TabsContent value="extracts" className="space-y-6">
-          <div className="flex items-center space-x-4 mb-6">
-            <Select defaultValue={currentYear.toString()}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Selecione o ano" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline">
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="irpf" className="space-y-6">
+          <div className="flex items-center space-x-4 mb-6">
+            <Button variant="default" onClick={handleDownloadIRPF}>
               <Calendar className="h-4 w-4 mr-2" />
-              Atualizar
+              Baixar Informe IRPF ({selectedYear})
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="card-medical">
-              <CardHeader>
-                <CardTitle>Extrato de Coparticipação</CardTitle>
-                <CardDescription>
-                  Seus gastos com coparticipação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {/* Example Extract Item */}
-                  <div className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">Consulta Eletiva</p>
-                      <p className="text-xs text-muted-foreground">05/2025</p>
-                    </div>
-                    <p className="text-sm font-medium">R$ 30,00</p>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">Exame Laboratorial</p>
-                      <p className="text-xs text-muted-foreground">05/2025</p>
-                    </div>
-                    <p className="text-sm font-medium">R$ 15,50</p>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar Extrato Completo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="grid grid-cols-1 gap-6">
             <Card className="card-medical">
               <CardHeader>
                 <CardTitle>Extrato IRPF</CardTitle>
-                <CardDescription>
-                  Informe de rendimentos para IR
-                </CardDescription>
+                <CardDescription>Informe de rendimentos</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {/* Example IRPF Item */}
-                  <div className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">Mensalidades Pagas</p>
-                      <p className="text-xs text-muted-foreground">
-                        Ano de {currentYear}
-                      </p>
+                  {irpfData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between py-2 border-b border-border/30 last:border-0"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{item.descricao}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Ano {item.ano}
+                        </p>
+                      </div>
+                      <p className="text-sm font-medium">R$ {item.valor}</p>
                     </div>
-                    <p className="text-sm font-medium">R$ 3.000,00</p>
-                  </div>
-                  <Button variant="outline" className="w-full mt-4">
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar Informe {currentYear}
-                  </Button>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
+      </Tabs>
 
-        {/* Boletos Tab */}
-        <TabsContent value="boletos" className="space-y-6">
-          <Card className="card-medical">
-            <CardHeader>
-              <CardTitle>Boletos</CardTitle>
-              <CardDescription>Baixe seus boletos de pagamento</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Baixar Boleto</h3>
-                <p className="text-muted-foreground mb-6">
-                  Clique no botão abaixo para baixar seu boleto atual
-                </p>
-                <Button variant="medical">
-                  <Download className="h-4 w-4 mr-2" />
-                  Baixar Boleto Atual
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Pagamento da Fatura</DialogTitle>
+            <DialogDescription>
+              {selectedInvoice &&
+                `Vencimento: ${new Date(
+                  selectedInvoice.vencimento
+                ).toLocaleDateString()} - Valor: R$ ${selectedInvoice.valor.toFixed(
+                  2
+                )}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="barcode" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="barcode">Código de Barras</TabsTrigger>
+              <TabsTrigger value="credit-card">Cartão de Crédito</TabsTrigger>
+              <TabsTrigger value="pix">PIX</TabsTrigger>
+            </TabsList>
+            <TabsContent value="barcode" className="mt-4">
+              <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+                <Input
+                  id="barcode"
+                  value={barcode}
+                  readOnly
+                  className="text-center font-mono text-sm tracking-wider"
+                />
+                <Button onClick={handleCopyBarcode} className="w-full">
+                  <Copy className="mr-2 h-4 w-4" /> Copiar Código
                 </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="credit-card" className="mt-4">
+              <div className="flex flex-col items-center justify-center space-y-4 p-10 border rounded-lg bg-muted/20 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  O pagamento com Cartão de Crédito estará disponível em breve.
+                </p>
+              </div>
+            </TabsContent>
+            <TabsContent value="pix" className="mt-4">
+              <div className="flex flex-col items-center justify-center space-y-4 p-10 border rounded-lg bg-muted/20 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  O pagamento com PIX estará disponível em breve.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter className="mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => handleDownloadBoleto()}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Baixar Boleto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={copartModalOpen} onOpenChange={setCopartModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              Extrato de Coparticipação
+            </DialogTitle>
+            <DialogDescription>
+              Itens cobrados no mês selecionado
+            </DialogDescription>
+          </DialogHeader>
+          <Card>
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                {coparticipacao.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum item encontrado.
+                  </p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Descrição</th>
+                        <th className="text-right p-2">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coparticipacao.map((item, idx) => (
+                        <tr key={idx} className="border-b last:border-0">
+                          <td className="p-2">{item.descricao}</td>
+                          <td className="p-2 text-right">R$ {item.valor}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -2,44 +2,53 @@ import { apiClient } from "./apiClient";
 import * as ApiTypes from "../types/api";
 
 export const financeiroService = {
+  getCodigoBarras: async (req: ApiTypes.BarcodeRequest) => {
+    const response = await apiClient.instance.post(
+      "/api/Financeiro/CodigoBarras",
+      req,
+      { params: { codigoMensalidade: req.codigoMensalidade } }
+    );
+    return response.data;
+  },
 
   baixarBoleto: async (req: ApiTypes.DownloadBoletoRequest) => {
     const response = await apiClient.instance.post(
       "/api/Financeiro/BaixarBoleto",
       req,
-      { responseType: "blob" } 
+      {
+        params: { codigoMensalidade: req.codigoMensalidade },
+        responseType: "blob",
+      }
     );
     return response.data;
-  }, 
-
-
-  getCodigoBarras: async (req: ApiTypes.BarcodeRequest) => {
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<{ codigoBarras: string }>>(
-      "/api/Financeiro/CodigoBarras",
-      req
-    );
-    return response.data?.dados;
   },
 
-
-  getExtratoCoParticipacao: async (req: ApiTypes.CoParticipationExtractRequest) => {
+  getExtratoCoParticipacao: async (
+    req: ApiTypes.CoParticipationExtractRequest
+  ) => {
     const response = await apiClient.instance.post(
       "/api/Financeiro/ExtratoCoParticipacao",
-      req
+      req,
+      {
+        params: {
+          anoCompetencia: req.anoCompetencia,
+          mesCompetencia: req.mesCompetencia,
+        },
+        responseType: "blob",
+      }
     );
-    return response.data?.dados || [];
+    return response.data;
   },
-
 
   getExtratoIRPF: async (req: ApiTypes.IRPFExtractRequest) => {
     console.log("Payload enviado para ExtratoIRPF:", req);
-    const response = await apiClient.instance.post(
-      "/api/Financeiro/ExtratoIRPF", 
-      req
+    const response = await apiClient.instance.post<Blob>(
+      "/api/Financeiro/ExtratoIRPF",
+      req,
+      { responseType: "blob" }
     );
-    return response.data?.dados || [];
+    return response.data;
   },
-
 
   listarExtratoIRPF: async (req: ApiTypes.ListIRPFExtractRequest) => {
     console.log("Payload enviado para ListarExtratoIRPF:", req);
@@ -50,13 +59,12 @@ export const financeiroService = {
     return response.data?.dados || [];
   },
 
-
   listarParcelas: async (req: ApiTypes.ListInstallmentsRequest) => {
     console.log("Payload enviado para ListarParcelas:", req);
-    const response = await apiClient.instance.post<ApiTypes.ApiResponse<ApiTypes.Installment[]>>(
+    const response = await apiClient.instance.post<ApiTypes.Installment[]>(
       "/api/Financeiro/ListarParcelas",
       req
     );
-    return response.data?.dados || [];
+    return response.data;
   },
 };

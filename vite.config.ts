@@ -1,23 +1,24 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: ["lucide-react"],
   },
-  server:{
+  server: {
     open: true,
     proxy: {
-      '/api': {
-        target: 'https://apiapp2024.bensaude.com.br',
+      "/api": {
+        target: "https://apiapp2024.bensaude.com.br",
         changeOrigin: true,
         secure: false,
       },
-    }
-    
+    },
+    watch: {
+      usePolling: true,
+    },
   },
   resolve: {
     alias: {
