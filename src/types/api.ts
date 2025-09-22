@@ -201,8 +201,12 @@ export interface ProviderRequest {
 //                                        Autorizações types 
 //================================================================================================================== 
 
-export interface ListAuthorizationsRequest {
+export interface ListBeneficiariesRequest {
   perfilAutenticado: PerfilAutenticado
+}
+export interface ListAuthorizationsRequest {
+  perfilAutenticado: PerfilAutenticado,
+  codigoBeneficiario: string
 }
 
 export interface procedures {

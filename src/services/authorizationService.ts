@@ -3,10 +3,10 @@ import type * as ApiTypes from "../types/api";
 
 export const authorizationService = {
   getBeneficiaries: async (
-    req: ApiTypes.ListAuthorizationsRequest
+    req: ApiTypes.ListBeneficiariesRequest
   ): Promise<ApiTypes.Beneficiary[]> => {
     try {
-      const response = await apiClient.instance.post("/api/Autorizacoes/Beneficiarios", req);
+      const response = await apiClient.instance.post("/api/Autorizacoes/Beneficiarios", req);      
       return !response.data ? [] : response.data.map(item => ({
         codigo: item.codigoBeneficiario,
         nome: item.nome
