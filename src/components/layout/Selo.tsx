@@ -1,6 +1,11 @@
 import React from "react";
 
-export default function Selo({ codigo, nome }) {
+interface SeloProps {
+  codigo: string;
+  nome: string;
+}
+
+export default function Selo({ codigo, nome }: SeloProps) {
   if (!codigo) return null;
 
   return (

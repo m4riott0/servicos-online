@@ -5,8 +5,7 @@ import {
   FileText,
   CreditCard,
   Stethoscope,
-  Shield,
-  Ribbon,
+  HeartPulse,
   BadgeDollarSign,
   Tag,
 } from "lucide-react";
@@ -49,7 +48,7 @@ export const navigation: NavItem[] = [
   {
     name: "Medicina Preventiva", 
     href: "/medicina-preventiva",
-    icon: Shield,
+    icon: HeartPulse,
   },
   {
     name: "Clube de benefícios",
