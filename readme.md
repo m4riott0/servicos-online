@@ -1,2 +1,4 @@
-*TODO: modal caso o cpf tiver 2 contratos*
-*TODO: tratativa para apenas responsáveis financeiros podem acessar*
+## TODO
+
+- [ ] modal caso o cpf tiver 2 contratos
+- [ ] tratativa para apenas responsáveis financeiros podem acessar
