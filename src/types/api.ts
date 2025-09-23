@@ -32,7 +32,29 @@ export interface User {
   perfilAutenticado: PerfilAutenticado;
   codigoPlano?: number;
   codigoContrato?: number;
-  tipoPerfil?: string;
+  ehBeneficiary?: boolean;
+
+  // Dados Pessoais
+  dataNascimento?: string;
+  sexo?: string;
+  nomeMae?: string;
+  rg?: string;
+  orgaoEmissorRg?: string;
+  cartaoNacionalSaude?: string;
+  tituloEleitor?: string;
+  estadoCivil?: string;
+  profissao?: string;
+  pisPasep?: string;
+
+  // Dados Contratuais
+  numeroCarteirinha?: string;
+  dataContratacao?: string;
+  padraoAcomodacao?: string;
+  tipoContratacao?: string;
+  produtoContratado?: string;
+  segmentacaoAssistencial?: string;
+  dataFinalCPT?: string;
+  carencias?: any[];
 }
 
 export interface Params {
@@ -273,10 +295,17 @@ export interface PreventiveMedicineRequest {
 }
 
 //==================================================================================================================
-//                                        Odonto types
+//                                        Benefícios types
 //==================================================================================================================
-export interface OdontoInterestRequest {
+export interface ClubeRequest {
   perfilAutenticado: PerfilAutenticado;
+  cpf: number;
+}
+
+export interface ClubeResponse {
+  smartToken: string;
+  appSmartLink: string;
+  webSmartLink: string;
 }
 
 //==================================================================================================================
