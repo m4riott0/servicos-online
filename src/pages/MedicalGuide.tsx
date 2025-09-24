@@ -41,7 +41,6 @@ export const MedicalGuide: React.FC = () => {
 
   // Form validation states
   const [cityError, setCityError] = useState('');
-  const [specialtyError, setSpecialtyError] = useState('');
 
   const { toast } = useToast();
 
@@ -76,7 +75,6 @@ export const MedicalGuide: React.FC = () => {
     setSelectedSpecialty('');
     setSearchTerm('');
     setCityError('');
-    setSpecialtyError('');
   };
 
   // Form submit handler
@@ -87,15 +85,17 @@ export const MedicalGuide: React.FC = () => {
     if (!selectedCity) {
       setCityError('Selecione uma cidade.');
       valid = false;
-    }
-    if (!selectedSpecialty) {
-      setSpecialtyError('Selecione uma especialidade.');
+    } else if (!selectedSpecialty && !searchTerm) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "É necessário informar o nome do médico ou selecionar uma especialidade",
+        variant: "destructive",
+      });
       valid = false;
     }
     if (!valid) return;
 
     setCityError('');
-    setSpecialtyError('');
 
     // Aqui você pode chamar a busca real
     const payload: ApiTypes.ProviderRequest = {
@@ -114,7 +114,6 @@ export const MedicalGuide: React.FC = () => {
   };
   const handleSpecialtyChange = (value: string) => {
     setSelectedSpecialty(value);
-    if (value) setSpecialtyError('');
   };
 
   if (isLoading) {
@@ -167,20 +166,6 @@ export const MedicalGuide: React.FC = () => {
         <CardContent>
           <form onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Search Term */}
-              <div className="space-y-2">
-                <Label htmlFor="search">Buscar por nome</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Nome do médico ou endereço"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
 
               {/* City Filter */}
               <div className="space-y-2">
@@ -209,17 +194,30 @@ export const MedicalGuide: React.FC = () => {
                 )}
               </div>
 
+              {/* Search Term */}
+              <div className="space-y-2">
+                <Label htmlFor="search">Buscar por nome</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Nome do médico ou endereço"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
               {/* Specialty Filter */}
               <div className="space-y-2">
                 <Label htmlFor="specialty">
-                  Especialidade <span className="text-red-600">*</span>
+                  Especialidade
                 </Label>
                 <Select value={selectedSpecialty} onValueChange={handleSpecialtyChange}>
                   <SelectTrigger
                     id="specialty"
-                    className={
-                      `w-full ${specialtyError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`
-                    }
+                    className="w-full"
                   >
                     <SelectValue placeholder="Selecione uma especialidade" />
                   </SelectTrigger>
@@ -231,9 +229,6 @@ export const MedicalGuide: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {specialtyError && (
-                  <span className="text-xs text-red-600 mt-1 block">{specialtyError}</span>
-                )}
               </div>
 
               {/* Clear Filters */}
@@ -372,7 +367,7 @@ export const MedicalGuide: React.FC = () => {
                         <p className="font-medium">Endereço:</p>
                         <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
                           {provider.locaisAtendimento.map((data, index) => (
-                            <li key={index}>{data.rua} {data.bairro != "NÃO INFORMADO" &&  "-" + data.bairro}, {data.cidade} / {data.uf} - {data.cep} </li>
+                            <li key={index}>{data.rua} {data.bairro != "NÃO INFORMADO" && "-" + data.bairro}, {data.cidade} / {data.uf} - {data.cep} </li>
                           ))}
                         </ul>
                       </div>
