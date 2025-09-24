@@ -146,9 +146,16 @@ export interface AccountProfile {
   codigoPlano: number;
   codigoContrato: number;
   nome?: string;
+  cpf: number;
   email?: string;
   celular?: string;
   perfilAutenticado?: PerfilAutenticado;
+  dataCancelamento?: string; 
+  dataInicioVigencia?: string;
+  tipoPerfil: string;
+  visualizaExtrato: boolean;
+  visualizaFatura: boolean;
+  visualizaIr: boolean;
 }
 
 //==================================================================================================================

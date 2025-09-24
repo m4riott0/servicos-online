@@ -1,4 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,11 +21,11 @@ export function maskCelular(celular: string): string {
     : celular;
 }
 
-export function formatDate(dateString: string): string {
+export const formatDateTime = (dateString: string, pattern = "dd/MM/yyyy HH:mm:ss") => {
+  if (!dateString) return "---";
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("pt-BR").format(date);
-}
-
+  return format(date, pattern, { locale: ptBR });
+};
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState, useCallback, useMemo } from
 import { authService } from "../services/authService";
 import { apiClient } from "../services/apiClient";
 import { registerService } from "../services/registerService";
-import type { User, CPFVerificationResponse } from "../types/api";
+import type { User, CPFVerificationResponse, AccountProfile } from "../types/api";
 import { useToast } from "../hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (cpf: number, senha: string) => Promise<boolean>;
+  login: (cpf: number, senha: string, perfil: AccountProfile) => Promise<boolean>;
   logout: () => void;
   verificaCPF: (cpf: number) => Promise<CPFVerificationResponse | null>;
   register: (cpf: number, senha: string) => Promise<boolean>;
@@ -67,25 +67,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [toast]);
 
   // Realiza login validando perfis e sessão
-  const login = useCallback(async (cpf: number, senha: string): Promise<boolean> => {
+  const login = useCallback(async (cpf: number, senha: string, perfil: AccountProfile): Promise<boolean> => {
+    console.log('testando o grande teste dos teste')
+
     try {
-      setIsLoading(true);
-
-      const profilesResponse = await authService.getAccountProfiles({
-        cpf,
-        senha,
-      });
-
-      if (!Array.isArray(profilesResponse) || profilesResponse.length === 0) {
-        toast({
-          title: "CPF ou senha inválidos",
-          description: "Verifique suas credenciais e tente novamente.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      const perfil = profilesResponse[0];
 
       const authResponse = await authService.authenticate({
         codigoPlano: perfil.codigoPlano,
@@ -148,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         dataFinalCPT: undefined, 
         carencias: undefined, 
       };
-
+      
       setUser(userData);
 
       toast({
@@ -195,8 +180,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return false;
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
+
+
+
   }, [toast]);
 
   // Cadastra senha para o usuário

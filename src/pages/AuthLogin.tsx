@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
@@ -17,6 +17,19 @@ import { useToast } from "../hooks/use-toast";
 import loginHero from "../assets/login-hero.png";
 import Logo from "../assets/bensaude.png";
 import { useIsMobile } from "../hooks/use-mobile";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { AccountProfile } from "@/types/api";
+import { authService } from "@/services";
+import { formatDateTime } from "@/lib/utils";
+
 
 
 interface AuthLoginProps {
@@ -37,18 +50,18 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({
   const [senha, setSenha] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [perfils, setPerfils] = useState<AccountProfile[]>([])
 
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-
-
 
   if (isAuthenticated) {
     return <Navigate to="/Home" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
 
     if (!senha) {
@@ -72,17 +85,28 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({
     setIsSubmitting(true);
 
     try {
-      const cpfNumerico = cpf.replace(/\D/g, "");
-      console.log("Tentando login com CPF:", cpfNumerico, "e senha:", senha);
+      const cpfNumerico = parseInt(cpf.replace(/\D/g, ""));
 
-      const success = await login(parseInt(cpfNumerico), senha);
-      console.log("Resultado do login:", success);
+      const profilesResponse = await authService.getAccountProfiles({
+        cpf: cpfNumerico,
+        senha,
+      });
 
-      if (!success) {
-        console.log("Login falhou - erro já tratado no contexto");
-      } else {
-        console.log("Login bem-sucedido!");
+      if (!Array.isArray(profilesResponse) || profilesResponse.length === 0) {
+        toast({
+          title: "CPF ou senha inválidos",
+          description: "Verifique suas credenciais e tente novamente.",
+          variant: "destructive",
+        });
+        return false;
       }
+      
+      setPerfils(profilesResponse);
+
+      if (profilesResponse.length == 1) {
+        await login(cpfNumerico, senha, profilesResponse[0]);
+      }
+
     } catch (err) {
       console.error("Erro inesperado no login:", err);
       toast({
@@ -94,9 +118,13 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({
       setIsSubmitting(false);
     }
   };
-  {
-    /* TODO: fazer modal para selecionar o contrato caso o cpf digitado tenha 2 contratos */
-  }
+
+  const handleClickPerfil = async (perfil: AccountProfile) => {
+    const cpfNumerico = parseInt(cpf.replace(/\D/g, ""));
+    await login(cpfNumerico, senha, perfil);
+  };
+
+
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* lado esquerdo */}
@@ -210,6 +238,57 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({
               </form>
             </CardContent>
           </Card>
+
+          {/* Selecionar Perfil - Dialog */}
+          <Dialog
+            open={perfils.length > 1}
+            onOpenChange={(open) => {
+              if (!open) {
+                // setPerfils([]);
+                return
+              }
+            }}
+          >
+            <DialogContent className="[&>button]:hidden">
+              <DialogHeader>
+                <DialogTitle>Perfis Disponíveis</DialogTitle>
+                <DialogDescription>
+                  Foram carregados {perfils.length} perfis.  <br />
+                  Qual contrato deseja acessar?
+                </DialogDescription>
+              </DialogHeader>
+
+
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+                {perfils.map((perfil, index) => (
+                  <Card
+                    key={index}
+                    onClick={() => handleClickPerfil(perfil)}
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                    }}
+                    className="
+                      w-full p-4 bg-primary text-white rounded-md 
+                      transition-all duration-300 ease-in-out cursor-pointer
+                      hover:bg-primary/80 hover:scale-105 hover:shadow-lg
+                    "
+                  >
+                    <CardHeader>
+                      <CardTitle style={{ wordBreak: "break-word" }}>
+                        Plano/Contrato: {perfil.codigoPlano}/{perfil.codigoContrato}
+                      </CardTitle>
+                      <CardDescription className="text-white">
+                        Ativo desde: {formatDateTime(perfil.dataInicioVigencia) || "---"}
+                        {/* CPF: {cpf} */}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
+
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
