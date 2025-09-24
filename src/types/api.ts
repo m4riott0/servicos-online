@@ -101,18 +101,18 @@ export interface AuthResponse {
   codigoSessao?: number;
   nome?: string;
   cpf?: string;
-  dataNascimento?: string; 
+  dataNascimento?: string;
   celular?: string;
   tipoPerfil?: string;
   codigoBeneficiario?: string;
   email?: string;
-  dataConfirmacaoEmail?: string; 
+  dataConfirmacaoEmail?: string;
   permitirValidacaoToken?: boolean;
 
   produtos?: {
     nome: string;
     codigoAns: string;
-    dataInicioVigencia: string; 
+    dataInicioVigencia: string;
     produtoPrincipal: boolean;
     coparticipativo: boolean;
     nomeEmpresa: string;
@@ -129,14 +129,13 @@ export interface AuthResponse {
     cpf: string;
     codigoMatricula: string;
     codigoBeneficiario: string;
-    dataNascimento: string; 
+    dataNascimento: string;
     padraoConforto: string;
     permitirValidacaoToken: boolean;
   }[];
   habilitaPix?: boolean;
   habilitaCartao?: boolean;
 }
-
 
 export interface AccountProfilesRequest {
   cpf: number;
@@ -342,18 +341,14 @@ export interface QuestionaryRequest {
 //==================================================================================================================
 //                                        SOS types
 //==================================================================================================================
-export interface SOSTermAcceptanceRequest {
-  perfilAutenticado: PerfilAutenticado;
-  codigoMatriculasBeneficiariosAlvo: string[];
-}
 
 export interface SOSBeneficiariesRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
-export interface SOSConfirmContractRequest {
+export interface SOSTermAcceptanceRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoToken: number;
+  codigoMatriculasBeneficiariosAlvo: string[];
 }
 
 export interface SOSSendSMSRequest {
@@ -361,22 +356,44 @@ export interface SOSSendSMSRequest {
   codigoMatriculasBeneficiariosAlvo: string[];
 }
 
+export interface SOSConfirmContractRequest {
+  perfilAutenticado: PerfilAutenticado;
+  codigoToken: number;
+}
+
+export interface SOSBeneficiariesResponse {
+  linkTermoAdesao: string;
+  linkContrato: string;
+  valorParaContratacao: number;
+  dataInicioVigenciaAposContratacao: string;
+  beneficiarios: {
+    nome: string;
+    codigoBeneficiario: string;
+    dataInicioVigencia: string;
+    temAcessorioContratado: boolean;
+  }[];
+}
+
+export type SOSTermAcceptanceResponse = void;
+
+export type SOSSendSMSResponse = void;
+
+export interface SOSConfirmContractResponse {
+  dataConclusaoContratacao: string;
+  dataInicioVigencia: string;
+  beneficiariosContratados: string[];
+}
+
 //==================================================================================================================
 //                                        Ortopédico types
 //==================================================================================================================
-export interface OrthopedicTermAcceptanceRequest {
-  perfilAutenticado: PerfilAutenticado;
-  codigoMensalidade: number;
-}
-
 export interface OrthopedicBeneficiariesRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoMensalidade: string;
 }
 
-export interface OrthopedicConfirmContractRequest {
+export interface OrthopedicTermAcceptanceRequest {
   perfilAutenticado: PerfilAutenticado;
-  codigoToken: number;
+  codigoMatriculasBeneficiariosAlvo: string[];
 }
 
 export interface OrthopedicSendSMSRequest {
@@ -384,6 +401,34 @@ export interface OrthopedicSendSMSRequest {
   codigoMatriculasBeneficiariosAlvo: string[];
 }
 
+export interface OrthopedicConfirmContractRequest {
+  perfilAutenticado: PerfilAutenticado;
+  codigoToken: number;
+}
+
+export interface OrthopedicBeneficiariesResponse {
+  linkContrato: string;
+  linkTermoAdesao: string;
+  arquivoTermoAdesao: string;
+  valorParaContratacao: number;
+  dataInicioVigenciaAposContratacao: string;
+  beneficiarios: {
+    nome: string;
+    codigoBeneficiario: string;
+    dataInicioVigencia: string;
+    temAcessorioContratado: boolean;
+  }[];
+}
+
+export type OrthopedicTermAcceptanceResponse = void;
+
+export type OrthopedicSendSMSResponse = void;
+
+export interface OrthopedicConfirmContractResponse {
+  dataConclusaoContratacao: string;
+  dataInicioVigencia: string;
+  beneficiariosContratados: string[];
+}
 //==================================================================================================================
 //                                        Financeiro types
 //==================================================================================================================

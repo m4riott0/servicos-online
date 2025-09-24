@@ -48,7 +48,7 @@ const commercialOptions = [
     description:
       "Adquira o serviço de atendimento pré-hospitalar de urgência e emergência.",
     icon: ShieldPlus,
-    path: "",
+    path: "/contratar-sos",
     action: null,
     color: "text-red-500",
   },
@@ -56,7 +56,7 @@ const commercialOptions = [
     title: "Contratar Plano Ortopédico",
     description: "Adicione o acessório de cobertura ortopédica ao seu plano.",
     icon: Bone,
-    path: "",
+    path: "/ortopedico",
     action: null,
     color: "text-black",
   },

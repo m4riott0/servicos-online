@@ -16,6 +16,8 @@ import { PasswordRecovery } from "./pages/PasswordRecovery";
 import NotFound from "./pages/NotFound";
 import { Beneficios } from "./pages/Beneficios";
 import { MedicinaPreventiva } from "./pages/MedicinaPreventiva";
+import { SOS } from "./pages/Sos";
+import { Ortopedico } from "./pages/ortopedico";
 
 const queryClient = new QueryClient();
 
@@ -33,12 +35,12 @@ const App = () => (
               <Route path="login" element={<Login />} />
               <Route path="cadastro" element={<Register />} />
             </Route>
-            
+
             {/* Protected Routes */}
             <Route path="/Home" element={<Layout />}>
               <Route index element={<Home />} />
             </Route>
-            
+
             <Route path="/guia-medico" element={<Layout />}>
               <Route index element={<MedicalGuide />} />
             </Route>
@@ -66,7 +68,15 @@ const App = () => (
             <Route path="/medicina-preventiva" element={<Layout />}>
               <Route index element={<MedicinaPreventiva />} />
             </Route>
-            
+
+            <Route path="/contratar-sos" element={<Layout />}>
+              <Route index element={<SOS />} />
+            </Route>
+
+            <Route path="/ortopedico" element={<Layout />}>
+              <Route index element={<Ortopedico />} />
+            </Route>
+
             {/* Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
