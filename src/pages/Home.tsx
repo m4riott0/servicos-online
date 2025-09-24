@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
@@ -6,114 +6,22 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
-import { authorizationService } from "../services/authorizationService";
-import { financeiroService } from "../services/financeiroService";
-import { Badge } from "../components/ui/badge";
-import { FileText, CreditCard, Users, FileSpreadsheet } from "lucide-react";
-import { Link } from "react-router-dom";
-import type { Beneficiary, Authorization, Installment } from "../types/api";
+} from "@/components/ui/card";
+import { User, FileSpreadsheet } from "lucide-react";
+import { format } from "date-fns";
+
+const DataItem: React.FC<{ label: string; value?: string | number | null }> = ({
+  label,
+  value,
+}) => (
+  <div className="p-4 bg-muted/50 rounded-lg">
+    <p className="text-sm text-muted-foreground">{label}</p>
+    <p className="text-lg font-semibold">{value || "Não informado"}</p>
+  </div>
+);
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
-
-  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
-  const [authorizations, setAuthorizations] = useState<Authorization[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-
-  const loadHomeData = useCallback(async () => {
-    if (!user?.perfilAutenticado) {
-      setIsLoadingData(false);
-      return;
-    }
-
-    setIsLoadingData(true);
-    try {
-      // const [
-      //   loadedBeneficiaries,
-      //   loadedAuthorizations,
-      //   // A busca de parcelas foi removida conforme solicitado.
-      // ] = await Promise.all([
-      //   authorizationService.getBeneficiaries({
-      //     perfilAutenticado: user.perfilAutenticado,
-      //   }),
-      //   authorizationService.getAuthorizations({
-      //     perfilAutenticado: user.perfilAutenticado,
-      //     codigoBeneficiario: 
-      //   }),
-      // ]);
-
-      // setBeneficiaries(loadedBeneficiaries);
-      // setAuthorizations(loadedAuthorizations);
-
-      const loadedBeneficiaries = await authorizationService.getBeneficiaries({
-        perfilAutenticado: user.perfilAutenticado,
-      });
-
-      const beneficiario = loadedBeneficiaries[0]; 
-
-      if (!beneficiario) {
-        console.error("Nenhum beneficiário encontrado");
-        return;
-      }
-
-      const loadedAuthorizations = await authorizationService.getAuthorizations({
-        perfilAutenticado: user.perfilAutenticado,
-        codigoBeneficiario: beneficiario.codigo,
-      });
-
-      setBeneficiaries([beneficiario]); // opcional: manter como array
-      setAuthorizations(loadedAuthorizations);
-    } catch (error) {
-      console.error("Error loading home data:", error);
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      loadHomeData();
-    }
-  }, [user, loadHomeData]);
-
-  const stats = useMemo(() => {
-    const pendingAuthorizations = authorizations.filter(
-      (auth) => auth.statusProcedimento.toLowerCase() === "pendente"
-    ).length;
-
-    // const activeBeneficiaries = beneficiaries.filter(
-    //   (b) => b.status.toLowerCase() === "ativo"
-    // ).length;
-
-    const activeBeneficiaries = beneficiaries.length
-
-    return [
-      {
-        title: "Autorizações Pendentes",
-        value: pendingAuthorizations.toString(),
-        icon: FileText,
-        color: "text-warning",
-        link: "/authorizations",
-      },
-      {
-        title: "Beneficiários depedentes",
-        value: activeBeneficiaries.toString(),
-        icon: Users,
-        color: "text-success",
-        link: "/beneficiaries",
-      },
-    ];
-  }, [beneficiaries, authorizations]);
-
-  if (isLoadingData) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -130,49 +38,71 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {stats.map((stat, index) => (
-          <Link to={stat.link} key={index}>
-            <Card className="card-medical hover:border-primary transition-all">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {/* Dados Pessoais */}
+      <Card className="card-medical">
+        <CardHeader>
+          <div className="flex items-center space-x-3">
+            <User className="h-6 w-6 text-primary" />
+            <CardTitle className="text-xl">Dados Pessoais</CardTitle>
+          </div>
+          <CardDescription>Suas informações de cadastro.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DataItem label="Nome" value={user?.nome} />
+          <DataItem
+            label="Data de Nascimento"
+            value={
+              user?.dataNascimento
+                ? format(new Date(user.dataNascimento), "dd/MM/yyyy")
+                : null
+            }
+          />
+          <DataItem label="Sexo" value={user?.sexo} />
+          <DataItem label="Nome da Mãe" value={user?.nomeMae} />
+          <DataItem label="CPF" value={user?.cpf} />
+          <DataItem label="RG" value={user?.rg} />
+          <DataItem label="Órgão Emissor do RG" value={user?.orgaoEmissorRg} />
+          <DataItem
+            label="Cartão Nacional de Saúde"
+            value={user?.cartaoNacionalSaude}
+          />
+          <DataItem label="Título de Eleitor" value={user?.tituloEleitor} />
+          <DataItem label="Estado Civil" value={user?.estadoCivil} />
+          <DataItem label="Profissão" value={user?.profissao} />
+          <DataItem label="PIS/PASEP" value={user?.pisPasep} />
+        </CardContent>
+      </Card>
 
-      {/* Contract Details */}
+      {/* Dados Contratuais */}
       <Card className="card-medical">
         <CardHeader>
           <div className="flex items-center space-x-3">
             <FileSpreadsheet className="h-6 w-6 text-primary" />
             <CardTitle className="text-xl">Detalhes do Contrato</CardTitle>
           </div>
+          <CardDescription>Informações sobre seu plano.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Número do Contrato</p>
-            <p className="text-lg font-semibold">
-              {user?.codigoContrato || "N/A"}
-            </p>
-          </div>
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Plano</p>
-            <p className="text-lg font-semibold">
-              {user?.codigoPlano || "Não informado"}
-            </p>
-          </div>
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">Status do Contrato</p>
-            <Badge variant={"default"}>Ativo</Badge>
-          </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DataItem label="Número do Contrato" value={user?.codigoContrato} />
+          <DataItem label="Número da Carteirinha" value={user?.numeroCarteirinha} />
+          <DataItem
+            label="Data de Contratação"
+            value={
+              user?.dataContratacao
+                ? format(new Date(user.dataContratacao), "dd/MM/yyyy")
+                : null
+            }
+          />
+          <DataItem label="Padrão de Acomodação" value={user?.padraoAcomodacao} />
+          <DataItem label="Tipo de Contratação" value={user?.tipoContratacao} />
+          <DataItem label="Produto Contratado" value={user?.produtoContratado} />
+          <DataItem
+            label="Segmentação Assistencial"
+            value={user?.segmentacaoAssistencial}
+          />
+          <DataItem label="Data Final da CPT" value={user?.dataFinalCPT} />
+          {/* Para carências, pode ser necessário um componente mais complexo */}
+          <DataItem label="Carências" value={"Verificar"} />
         </CardContent>
       </Card>
     </div>

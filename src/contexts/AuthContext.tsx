@@ -119,15 +119,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         celular: authResponse.celular || perfil.celular || "",
         perfilAutenticado: (() => {
           const sessao = authResponse.codigoSessao
-            ? parseInt(authResponse.codigoSessao, 10)
+            ? authResponse.codigoSessao
             : perfil.perfilAutenticado?.codigoSessao;
 
-          // Garante que o perfilAutenticado só seja criado com um codigoSessao válido.
           return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
         })(),
         codigoPlano: perfil.codigoPlano,
         codigoContrato: perfil.codigoContrato,
         ehBeneficiary: ehBeneficiary,
+
+        // Dados Pessoais e Contratuais
+        dataNascimento: authResponse.dataNascimento,
+        numeroCarteirinha: authResponse.codigoBeneficiario,
+        produtoContratado: authResponse.produtos?.[0]?.nome,
+        dataContratacao: authResponse.produtos?.[0]?.dataInicioVigencia,
+        padraoAcomodacao: authResponse.beneficiariosAssociados?.[0]?.padraoConforto,
+        sexo: undefined, 
+        nomeMae: undefined, 
+        rg: undefined, 
+        orgaoEmissorRg: undefined, 
+        cartaoNacionalSaude: undefined, 
+        tituloEleitor: undefined, 
+        estadoCivil: undefined, 
+        profissao: undefined, 
+        pisPasep: undefined, 
+        tipoContratacao: undefined, 
+        segmentacaoAssistencial: undefined, 
+        dataFinalCPT: undefined, 
+        carencias: undefined, 
       };
 
       setUser(userData);
@@ -136,7 +155,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         title: "Login realizado com sucesso",
         description: `Bem-vindo, ${perfil.nome?.split(" ")[0] || "Usuário"}!`,
       });
-
       return true;
     } catch (error: any) {
       let errorTitle = "Erro de conexão";
