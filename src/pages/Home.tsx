@@ -25,7 +25,7 @@ export const Home: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
+      {/* <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
@@ -36,7 +36,7 @@ export const Home: React.FC = () => {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Dados Pessoais */}
       <Card className="card-medical">

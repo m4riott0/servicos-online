@@ -8,6 +8,7 @@ import {
   HeartPulse,
   BadgeDollarSign,
   Tag,
+  BookMarked,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -54,6 +55,11 @@ export const navigation: NavItem[] = [
     name: "Clube de benefícios",
     href: "/beneficios",
     icon: Tag,
+  },
+  {
+    name: "Dados ANS",
+    href: "/ANS",
+    icon: BookMarked,
   }
 ];
 

@@ -221,7 +221,7 @@ export const SOS = () => {
                     {beneficiary.nome}
                   </Label>
                   {beneficiary.temAcessorioContratado && (
-                    <Badge variant="secondary">Já Possui</Badge>
+                    <Badge className="bg-blue-500 text-white">Já Possui</Badge>
                   )}
                 </div>
               ))}
