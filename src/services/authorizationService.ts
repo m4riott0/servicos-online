@@ -7,7 +7,9 @@ export const authorizationService = {
   ): Promise<ApiTypes.Beneficiary[]> => {
     try {
       const response = await apiClient.instance.post("/api/Autorizacoes/Beneficiarios", req);      
-      return !response.data ? [] : response.data.map(item => ({
+      return !response.data ? [] : response.data
+      .filter(item => item.nome !== null && item.nome !== undefined && item.nome.trim() !== "")
+      .map(item => ({
         codigo: item.codigoBeneficiario,
         nome: item.nome
       }));
