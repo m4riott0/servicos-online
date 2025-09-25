@@ -268,10 +268,10 @@ export const Financial: React.FC = () => {
                 {parcelas.map((p) => (
                   <div
                     key={p.codigoMensalidade}
-                    className="flex flex-wrap items-center justify-between gap-4 p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                         {ehResponsavelFinanceiro ? (
                           <DollarSign className="h-5 w-5 text-primary" />
                         ) : (
@@ -301,27 +301,16 @@ export const Financial: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-1.5">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 w-full sm:w-auto pb-8 sm:pb-0">
                       {ehResponsavelFinanceiro && (
                         <>
-                          {p.status === "Pago" ? (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Pago</span>
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
-                              <Clock className="h-3 w-3" />
-                              <span>Em Aberto</span>
-                            </Badge>
-                          )}
                           {p.status === "Pago" ? (
                             <Button variant="default" size="sm" onClick={() => handleDownloadBoleto(p)}>
                               <Download className="h-4 w-4 mr-2" /> Ver Recibo
                             </Button>
                           ) : (
                             <Button variant="default" size="sm" onClick={() => handlePayClick(p)}>
-                              <Barcode className="h-4 w-4 mr-2" /> Pagar
+                              <Barcode className="h-4 w-4 mr-2" /> Pagar Fatura
                             </Button>
                           )}
                         </>
@@ -336,6 +325,34 @@ export const Financial: React.FC = () => {
                           ? "Extrato Copart"
                           : "Baixar Extrato"}
                       </Button>
+                      {ehResponsavelFinanceiro && (<>
+                        <div className="absolute bottom-2 right-2 sm:hidden">
+                          {p.status === "Pago" ? (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Pago</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <Clock className="h-3 w-3" />
+                              <span>Em Aberto</span>
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="hidden sm:flex">
+                          {p.status === "Pago" ? (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Pago</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <Clock className="h-3 w-3" />
+                              <span>Em Aberto</span>
+                            </Badge>
+                          )}
+                        </div>
+                      </>)}
                     </div>
                   </div>
                 ))}

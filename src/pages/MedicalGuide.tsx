@@ -10,9 +10,7 @@ import {
   Search,
   MapPin,
   Phone,
-  Clock,
   Stethoscope,
-  Star,
   Filter
 } from 'lucide-react';
 import { medicalService } from '../services/medicalService';
@@ -24,24 +22,21 @@ import {
   DialogTrigger,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  DialogTitle, 
   DialogClose
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import Selo from '@/components/layout/Selo';
 
 export const MedicalGuide: React.FC = () => {
   const [cities, setCities] = useState<MedicalGuideCity[]>([]);
   const [specialties, setSpecialties] = useState<MedicalGuideSpecialty[]>([]);
   const [providers, setProviders] = useState<MedicalGuideProvider[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string>('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Form validation states
   const [cityError, setCityError] = useState('');
-
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,12 +52,11 @@ export const MedicalGuide: React.FC = () => {
       ]);
       setCities(citiesData || []);
       setSpecialties(specialtiesData || []);
-      setProviders([]);
     } catch (error) {
-      console.error('Error loading medical guide data:', error);
+      console.error('Erro ao carregar guia médico:', error);
       toast({
         title: "Erro ao carregar dados",
-        description: "Erro ao carregar dados do guia médico. Tente novamente.",
+        description: "Não foi possível carregar as informações. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -75,45 +69,32 @@ export const MedicalGuide: React.FC = () => {
     setSelectedSpecialty('');
     setSearchTerm('');
     setCityError('');
+    setProviders([]);
   };
 
-  // Form submit handler
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let valid = true;
+  const validateForm = (): boolean => {
     if (!selectedCity) {
       setCityError('Selecione uma cidade.');
-      valid = false;
-    } else if (!selectedSpecialty && !searchTerm) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "É necessário informar o nome do médico ou selecionar uma especialidade",
-        variant: "destructive",
-      });
-      valid = false;
+      return false;
     }
-    if (!valid) return;
-
     setCityError('');
+    return true;
+  };
 
-    // Aqui você pode chamar a busca real
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
     const payload: ApiTypes.ProviderRequest = {
       ...(selectedCity && { codigoCidade: Number(selectedCity) }),
       ...(selectedSpecialty && { codigoEspecialidade: Number(selectedSpecialty) }),
       ...(searchTerm && { nomeCredenciado: searchTerm })
     };
 
-    medicalService.getMedicalProviders(payload).then(data => setProviders(data || []));
-  };
-
-  // Remove erro ao selecionar valor
-  const handleCityChange = (value: string) => {
-    setSelectedCity(value);
-    if (value) setCityError('');
-  };
-  const handleSpecialtyChange = (value: string) => {
-    setSelectedSpecialty(value);
+    setIsLoading(true);
+    medicalService.getMedicalProviders(payload)
+      .then(data => setProviders(data || []))
+      .finally(() => setIsLoading(false));
   };
 
   if (isLoading) {
@@ -123,16 +104,6 @@ export const MedicalGuide: React.FC = () => {
       </div>
     );
   }
-
-  const enderecos = [
-    "Rua A, 123 - Bairro X",
-    "Rua B, 456 - Bairro Y"
-  ];
-
-  const telefones = [
-    "(11) 1234-5678",
-    "(11) 9876-5432"
-  ];
 
   return (
     <div className="space-y-8">
@@ -152,7 +123,6 @@ export const MedicalGuide: React.FC = () => {
       </div>
 
       {/* Filters */}
-
       <Card className="card-medical">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -167,38 +137,29 @@ export const MedicalGuide: React.FC = () => {
           <form onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-              {/* City Filter */}
+              {/* Cidade */}
               <div className="space-y-2">
-                <Label htmlFor="city">
-                  Cidade <span className="text-red-600">*</span>
-                </Label>
-                <Select value={selectedCity} onValueChange={handleCityChange}>
-                  <SelectTrigger
-                    id="city"
-                    className={
-                      `w-full ${cityError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`
-                    }
-                  >
+                <Label htmlFor="city">Cidade <span className="text-red-600">*</span></Label>
+                <Select value={selectedCity} onValueChange={(v) => { setSelectedCity(v); setCityError(''); }}>
+                  <SelectTrigger id="city" className={cityError ? "border-red-500" : ""}>
                     <SelectValue placeholder="Selecione uma cidade" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cities.map((city) => (
+                    {cities.map(city => (
                       <SelectItem key={city.codigo} value={city.codigo.toString()}>
-                        {city.nome + ` / ` + city.estado}
+                        {city.nome} / {city.estado}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {cityError && (
-                  <span className="text-xs text-red-600 mt-1 block">{cityError}</span>
-                )}
+                {cityError && <span className="text-xs text-red-600">{cityError}</span>}
               </div>
 
-              {/* Search Term */}
+              {/* Nome */}
               <div className="space-y-2">
                 <Label htmlFor="search">Buscar por nome</Label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="search"
                     placeholder="Nome do médico ou endereço"
@@ -209,29 +170,24 @@ export const MedicalGuide: React.FC = () => {
                 </div>
               </div>
 
-              {/* Specialty Filter */}
+              {/* Especialidade */}
               <div className="space-y-2">
-                <Label htmlFor="specialty">
-                  Especialidade
-                </Label>
-                <Select value={selectedSpecialty} onValueChange={handleSpecialtyChange}>
-                  <SelectTrigger
-                    id="specialty"
-                    className="w-full"
-                  >
+                <Label htmlFor="specialty">Especialidade</Label>
+                <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                  <SelectTrigger id="specialty">
                     <SelectValue placeholder="Selecione uma especialidade" />
                   </SelectTrigger>
                   <SelectContent>
-                    {specialties.map((specialty) => (
-                      <SelectItem key={specialty.codigo} value={specialty.codigo.toString()}>
-                        {specialty.nome}
+                    {specialties.map(spec => (
+                      <SelectItem key={spec.codigo} value={spec.codigo.toString()}>
+                        {spec.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Clear Filters */}
+              {/* Limpar */}
               <div className="space-y-2">
                 <Label>&nbsp;</Label>
                 <Button variant="outline" onClick={clearFilters} type="button" className="w-full">
@@ -242,29 +198,18 @@ export const MedicalGuide: React.FC = () => {
               {/* Pesquisar */}
               <div className="space-y-2 md:col-span-4">
                 <Label>&nbsp;</Label>
-                <Button
-                  variant="default"
-                  className="w-full"
-                  type="submit"
-                >
-                  Pesquisar
-                </Button>
+                <Button type="submit" className="w-full">Pesquisar</Button>
               </div>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* Results */}
+      {/* Resultados */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">
-            Prestadores Encontrados ({providers.length})
-          </h2>
-          {/* <Badge variant="secondary" className="text-sm">
-            {filteredProviders.length === providers.length ? 'Todos' : 'Filtrados'}
-          </Badge> */}
-        </div>
+        <h2 className="text-2xl font-bold">
+          Prestadores Encontrados ({providers.length})
+        </h2>
 
         {providers.length === 0 ? (
           <Card className="card-medical">
@@ -272,138 +217,110 @@ export const MedicalGuide: React.FC = () => {
               <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-medium mb-2">Nenhum prestador encontrado</h3>
               <p className="text-muted-foreground">
-                Tente ajustar os filtros de busca para encontrar mais resultados
+                Ajuste os filtros para tentar novamente
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {providers.map((provider) => (
-              <Card key={provider.codigo} className="card-medical hover:shadow-lg transition-all duration-300 flex flex-col h-full">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-3 text-lg mb-1">
-                        {provider.nome}
-                        <span className="text-xs text-muted-foreground">
-                          {provider.locaisAtendimento[0].nomeFantasia}
-                        </span>
-                      </CardTitle>
-
-                      <CardDescription className="flex items-center space-x-1 mt-1">
-                        {provider.selos && provider.selos.length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {provider.selos[0].nome}
-                          </Badge>
-                        )}
-                        {provider.selos && provider.selos.length > 1 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{provider.selos.length}
+            {providers.map(provider => {
+              const local = provider.locaisAtendimento?.[0];
+              return (
+                <Card key={provider.codigo} className="card-medical hover:shadow-lg transition-all flex flex-col h-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{provider.nome}</CardTitle>
+                    {provider.selos?.length > 0 && (
+                      <CardDescription>
+                        <Badge variant="outline" className="text-xs">{provider.selos[0].nome}</Badge>
+                        {provider.selos.length > 1 && (
+                          <Badge variant="outline" className="text-xs ml-1">
+                            +{provider.selos.length - 1}
                           </Badge>
                         )}
                       </CardDescription>
-                    </div>
-                    {/* <div className="flex items-center space-x-1 text-warning">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="text-sm font-medium">4.8</span>
-                    </div> */}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 flex-1">
-                  {/* Location */}
-                  <div className="flex items-start space-x-3">
-                    <MapPin className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">{provider.locaisAtendimento[0].rua + " - " + provider.locaisAtendimento[0].bairro}</p>
-                      <p className="text-sm text-muted-foreground">CEP: {provider.locaisAtendimento[0].cep}</p>
-                    </div>
-                  </div>
+                    )}
+                  </CardHeader>
 
-                  {/* Contact */}
-                  <div className="flex items-center space-x-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    {/* <p className="text-sm">{provider.telefone}</p> */}
-                    <p className="text-sm">{provider.locaisAtendimento[0].fone}</p>
-                  </div>
+                  <CardContent className="space-y-3 flex-1">
+                    {local && (
+                      <>
+                        <div className="flex items-start space-x-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                          <div>
+                            <p className="text-sm font-medium">{local.rua} - {local.bairro}</p>
+                            <p className="text-sm text-muted-foreground">CEP: {local.cep}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm">{local.fone}</p>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
 
-                  {/* Availability */}
-                  {/* <div className="flex items-center space-x-3">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-success font-medium">Disponível hoje</p>
-                  </div> */}
+                  {/* Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="medical" size="sm" className="m-2">Ver Detalhes</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Detalhes do credenciado</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-2 text-sm">
+                        <p><strong>Nome:</strong> {provider.nome}</p>
+                        <p><strong>CRM:</strong> {provider.nroRegistro}</p>
+                        <p><strong>Nome Fantasia:</strong> {local?.nomeFantasia}</p>
+                        <p><strong>Razão Social:</strong> {local?.razaoSocial}</p>
+                        <p><strong>CNPJ/CPF:</strong> {local?.cnpj}</p>
 
-                  {/* Actions */}
-                </CardContent>
+                        {/* Endereços */}
+                        <div>
+                          <p className="font-medium mt-2">Endereços:</p>
+                          <ul className="list-disc ml-4">
+                            {provider.locaisAtendimento?.map((data, i) => (
+                              <li key={i}>
+                                {data.rua}{data.bairro !== "NÃO INFORMADO" && ` - ${data.bairro}`}, {data.cidade} / {data.uf} - {data.cep}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
 
-                <Dialog>
-                  {/* Botão que abre o Dialog */}
-                  <DialogTrigger asChild>
-                    <div className="grid grid-cols-2 gap-3 p-2 mt-auto ml-2 mb-2">
-                      <Button variant="medical" size="sm" className="w-full">
-                        Ver Detalhes
-                      </Button>
-                    </div>
-                  </DialogTrigger>
+                        {/* Telefones */}
+                        <div>
+                          <p className="font-medium mt-2">Telefones:</p>
+                          <ul className="list-disc ml-4">
+                            {provider.locaisAtendimento?.map((data, i) => (
+                              <li key={i}>{data.fone}</li>
+                            ))}
+                          </ul>
+                        </div>
 
-                  {/* Conteúdo do Dialog */}
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Detalhes do credenciado</DialogTitle>
-                      {/* <DialogDescription>
-                        Aqui vai a descrição ou instruções do dialog.
-                      </DialogDescription> */}
+                        <p><strong>Tipo de estabelecimento:</strong> {local?.tipoEstabelecimento}</p>
+                        <p><strong>Site:</strong> {local?.site}</p>
 
-
-                      {/* Detalhes do credenciado */}
-                      <p><span className="font-medium">Nome:</span> {provider.nome}</p>
-                      <p><span className="font-medium">CRM:</span> {provider.nroRegistro}</p>
-                      <p><span className="font-medium">NOME FANTASIA:</span> {provider.locaisAtendimento[0].nomeFantasia}</p>
-                      <p><span className="font-medium">RAZÃO SOCIAL:</span> {provider.locaisAtendimento[0].razaoSocial}</p>
-                      <p><span className="font-medium">CNPJ/CPF:</span> {provider.locaisAtendimento[0].cnpj}</p>
-
-
-                      {/* Endereços */}
-                      <div className="mt-4">
-                        <p className="font-medium">Endereço:</p>
-                        <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                          {provider.locaisAtendimento.map((data, index) => (
-                            <li key={index}>{data.rua} {data.bairro != "NÃO INFORMADO" && "-" + data.bairro}, {data.cidade} / {data.uf} - {data.cep} </li>
-                          ))}
-                        </ul>
+                        {/* Selos */}
+                        {provider.selos?.length > 0 && (
+                          <div>
+                            <p className="font-medium mt-2">Selos:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {provider.selos.map(selo => (
+                                <Selo key={selo.codigo} codigo={selo.codigo.toString()} nome={selo.nome} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Telefones */}
-                      <div className="mt-4">
-                        <p className="font-medium">Telefones:</p>
-                        <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                          {provider.locaisAtendimento.map((data, index) => (
-                            <li key={index}>{data.fone}</li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <p><span className="font-medium">Tipo de estabelecimento:</span> {provider.locaisAtendimento[0].tipoEstabelecimento}</p>
-                      <p><span className="font-medium">Site:</span> {provider.locaisAtendimento[0].site}</p>
-
-                      {/* Selos */}
-                      <div className="mt-4">
-                        <p className="font-medium">Selos:</p>
-                        <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                          {provider.selos.map((data, index) => (
-                            <Selo codigo={data.codigo} nome={data.nome}></Selo>
-                          ))}
-                        </ul>
-                      </div>
-
-                    </DialogHeader>
-                    {/* Botão para fechar */}
-                    <DialogClose asChild>
-                      <Button className="mt-4">Fechar</Button>
-                    </DialogClose>
-                  </DialogContent>
-                </Dialog>
-              </Card>
-            ))}
+                      <DialogClose asChild>
+                        <Button className="mt-4 w-full">Fechar</Button>
+                      </DialogClose>
+                    </DialogContent>
+                  </Dialog>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

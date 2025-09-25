@@ -27,6 +27,13 @@ import {
   Download,
   Eye,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 import { authorizationService } from "../services/authorizationService";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/use-toast";
@@ -143,6 +150,15 @@ export const Authorizations: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const normalizedStatus = status.toLowerCase();
 
+    if (normalizedStatus === "negado") {
+      return (
+        <Badge variant="default" className="flex items-center justify-center space-x-1 w-28">
+          <CheckCircle className="h-3 w-3 text-white" />
+          <span>Concluído</span>
+        </Badge>
+      );
+    }
+
     const statusMap = {
       aprovado: {
         variant: "default" as const,
@@ -154,18 +170,13 @@ export const Authorizations: React.FC = () => {
         icon: Clock,
         color: "text-warning",
       },
-      negado: {
-        variant: "destructive" as const,
-        icon: XCircle,
-        color: "text-white",
-      },
     };
 
     const statusInfo = statusMap[normalizedStatus] || statusMap["pendente"];
     const Icon = statusInfo.icon;
 
     return (
-      <Badge variant={statusInfo.variant} className="flex items-center space-x-1">
+      <Badge variant={statusInfo.variant} className="flex items-center justify-center space-x-1 w-28">
         <Icon className={`h-3 w-3 ${statusInfo.color}`} />
         <span className="capitalize">{status}</span>
       </Badge>
@@ -266,43 +277,39 @@ export const Authorizations: React.FC = () => {
               {authorizations.map((auth) => (
                 <Card key={auth.numeroTransacao} className="card-medical">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">                          
-                        </CardTitle>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <div className="flex items-center space-x-1">
+                        <div className="flex flex-col space-y-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
                             <span>
                               {new Date(auth.dataSolicitacao).toLocaleDateString("pt-BR")}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center gap-2">
                             <User className="h-4 w-4" />
-                            SOLICITADO POR: <span className="font-bold">{auth.prestadorSolicitante}</span>
+                            <span>Solicitado por: <span className="font-semibold">{auth.prestadorSolicitante}</span></span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end space-y-2">
+                      <div className="flex-shrink-0">
                         {getStatusBadge(auth.statusProcedimento)}
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        N° TRANSAÇÃO: {auth.numeroTransacao}
-                      </p>
-                      
-                      <div className="flex items-center space-x-2">     
-                        {/* Procedimentos */}
+                    <div className="border-t pt-4 mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Procedimentos:</p>
                         {auth.procedimentos.map((item) => (
-                          <p className="text-sm text-muted-foreground">
-                            PROCEDIMENTO: <b>{item.codigoProcedimento}</b><br/>
-                            DESCRIÇÃO: <b>{item.descricaoProcedimento}</b>
-                          </p>
-                        ))}                        
+                          <div key={item.codigoProcedimento} className="text-sm text-muted-foreground pl-2">
+                            <p><b>{item.codigoProcedimento}</b> - {item.descricaoProcedimento}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-xs text-muted-foreground md:text-right">
+                        <p>N° Transação:</p>
+                        <p className="font-mono">{auth.numeroTransacao}</p>
                       </div>
                     </div>
                   </CardContent>

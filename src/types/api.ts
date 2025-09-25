@@ -225,33 +225,41 @@ export interface MedicalGuideSpecialty {
   codigo: number;
   nome: string;
 }
+
 export interface ServiceLocation {
-  bairro: string;
-  cdLocalAtendimento: number;
-  cep: number;
-  cidade: string;
-  cnpj: string;
   fone: string;
+  cep: number;
   nomeFantasia: string;
   razaoSocial: string;
-  rua: string;
+  cnpj: string;
+  cpf: string;
   site: string;
   tipoEstabelecimento: string;
+  cidade: string;
   uf: string;
+  bairro: string;
+  rua: string;
+  cdLocalAtendimento: number;
 }
 
-export interface selos {
-  codigo: string;
+export interface Seal {
+  codigo: number;
   nome: string;
 }
 
 export interface MedicalGuideProvider {
   codigo: number;
-  locaisAtendimento: ServiceLocation[];
   nome: string;
-  nroRegistro: string;
-  selos: selos[];
   tipoRegistro: number;
+  nroRegistro: string;
+  locaisAtendimento: ServiceLocation[];
+  selos: Seal[];
+}
+
+export interface MedicalGuideProviderResponse {
+  codigo: number;
+  nome: string;
+  prestadores: MedicalGuideProvider[];
 }
 
 export interface ProviderRequest {
@@ -265,6 +273,13 @@ export interface ProviderRequest {
   crm?: string;
   somenteOdonto?: boolean;
 }
+
+export interface MedicalGuideProduct {
+  codigo: string;
+  descricao: string;
+  tipoContrato: number;
+}
+
 
 //==================================================================================================================
 //                                        Autorizações types
