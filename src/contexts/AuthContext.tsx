@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         codigoPlano: perfil.codigoPlano,
         codigoContrato: perfil.codigoContrato,
         ehBeneficiary: ehBeneficiary,
-
+        tipoPerfil: authResponse.tipoPerfil,
         // Dados Pessoais e Contratuais
         dataNascimento: authResponse.dataNascimento,
         numeroCarteirinha: authResponse.codigoBeneficiario,

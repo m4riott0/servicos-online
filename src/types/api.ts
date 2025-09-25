@@ -33,6 +33,7 @@ export interface User {
   codigoPlano?: number;
   codigoContrato?: number;
   ehBeneficiary?: boolean;
+  tipoPerfil?: string;
 
   // Dados Pessoais
   dataNascimento?: string;

@@ -47,6 +47,7 @@ import {
 import { financeiroService } from "../services/financeiroService";
 import * as ApiTypes from "../types/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { useResponsavelFinanceiro } from "@/hooks/usePermissao";
 
 export const Financial: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -63,9 +64,10 @@ export const Financial: React.FC = () => {
   );
   const [irpfData, setIrpfData] = useState<any[]>([]);
 
-  const { user } = useAuth();
-
   const { toast } = useToast();
+  const { user } = useAuth();
+  const ehResponsavelFinanceiro = useResponsavelFinanceiro();
+
 
   // Carregar parcelas
   useEffect(() => {
@@ -91,7 +93,7 @@ export const Financial: React.FC = () => {
 
   // Listar IRPF
   useEffect(() => {
-    const fetchIrpfData = async () => {
+    const fetchIrpfData = async () => {      
       if (!user?.perfilAutenticado) {
         return;
       }
@@ -239,16 +241,26 @@ export const Financial: React.FC = () => {
 
       <Tabs defaultValue="invoices" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="invoices">Faturas e Boletos</TabsTrigger>
+          <TabsTrigger value="invoices">
+            {ehResponsavelFinanceiro
+              ? "Faturas e Boletos"
+              : "Extrato de Coparticipação"}
+          </TabsTrigger>
           <TabsTrigger value="irpf">Imposto de Renda</TabsTrigger>
         </TabsList>
 
         <TabsContent value="invoices" className="space-y-6">
           <Card className="card-medical">
             <CardHeader>
-              <CardTitle>Parcelas dos últimos 12 meses</CardTitle>
+              <CardTitle>
+                {ehResponsavelFinanceiro
+                  ? "Parcelas dos últimos 12 meses"
+                  : "Extratos de Coparticipação"}
+              </CardTitle>
               <CardDescription>
-                Visualize e gerencie suas mensalidades
+                {ehResponsavelFinanceiro
+                  ? "Visualize e gerencie suas mensalidades"
+                  : "Baixe seus extratos de coparticipação por competência"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -256,63 +268,63 @@ export const Financial: React.FC = () => {
                 {parcelas.map((p) => (
                   <div
                     key={p.codigoMensalidade}
-                    className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex flex-wrap items-center justify-between gap-4 p-4 border border-border/50 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <DollarSign className="h-5 w-5 text-primary" />
+                        {ehResponsavelFinanceiro ? (
+                          <DollarSign className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Calendar className="h-5 w-5 text-primary" />
+                        )}
                       </div>
                       <div>
-                        <p className="font-medium">
-                          {p.valor.toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Vencimento:{" "}
-                          {p.vencimento
-                            ? new Date(p.vencimento).toLocaleDateString()
-                            : "-"}
-                        </p>
+                        {ehResponsavelFinanceiro ? (
+                          <>
+                            <p className="font-medium">
+                              {p.valor.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              })}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Vencimento:{" "}
+                              {p.vencimento
+                                ? new Date(p.vencimento).toLocaleDateString()
+                                : "-"}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-medium">
+                            Competência: {p.competencia || "N/A"}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-1.5">
-                      {p.status === "Pago" ? (
-                        <Badge
-                          variant="outline"
-                          className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
-                        >
-                          <CheckCircle className="h-3 w-3" />
-                          <span>Pago</span>
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
-                        >
-                          <Clock className="h-3 w-3" />
-                          <span>Em Aberto</span>
-                        </Badge>
-                      )}
-                      {p.status === "Pago" ? (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleDownloadBoleto(p)}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Ver Recibo
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handlePayClick(p)}
-                        >
-                          <Barcode className="h-4 w-4 mr-2" />
-                          Pagar
-                        </Button>
+                      {ehResponsavelFinanceiro && (
+                        <>
+                          {p.status === "Pago" ? (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Pago</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <Clock className="h-3 w-3" />
+                              <span>Em Aberto</span>
+                            </Badge>
+                          )}
+                          {p.status === "Pago" ? (
+                            <Button variant="default" size="sm" onClick={() => handleDownloadBoleto(p)}>
+                              <Download className="h-4 w-4 mr-2" /> Ver Recibo
+                            </Button>
+                          ) : (
+                            <Button variant="default" size="sm" onClick={() => handlePayClick(p)}>
+                              <Barcode className="h-4 w-4 mr-2" /> Pagar
+                            </Button>
+                          )}
+                        </>
                       )}
                       <Button
                         variant="outline"
@@ -320,7 +332,9 @@ export const Financial: React.FC = () => {
                         onClick={() => handleExtratoCoPart(p)}
                       >
                         <FileText className="h-4 w-4 mr-2" />
-                        Extrato Copart
+                        {ehResponsavelFinanceiro
+                          ? "Extrato Copart"
+                          : "Baixar Extrato"}
                       </Button>
                     </div>
                   </div>
