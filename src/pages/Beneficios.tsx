@@ -9,7 +9,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Gift, ExternalLink, AlertTriangle } from "lucide-react";
+import {
+  Gift,
+  ExternalLink,
+  AlertTriangle,
+  Share2,
+  Info,
+  Check,
+  X,
+} from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { beneficiosService } from "../services/beneficiosService";
 import {
@@ -22,6 +30,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const Beneficios: React.FC = () => {
   const { user } = useAuth();
@@ -123,9 +132,55 @@ export const Beneficios: React.FC = () => {
                   Atenção
                 </DialogTitle>
                 {!generatedLink ? (
-                  <DialogDescription className="pt-4">
-                    Você está prestes a ser redirecionado para um site externo,
-                    o nosso Clube de Benefícios. Deseja continuar?
+                  <DialogDescription
+                    asChild
+                    className="pt-4 max-h-[60vh] overflow-y-auto pr-2"
+                  >
+                    <div className="space-y-4 text-sm text-left">
+                      <p className="font-bold text-center text-base">
+                        Termo de Ciência – Redirecionamento para Parceiro
+                      </p>
+                      <p>
+                        Você está prestes a acessar serviços oferecidos pela
+                        nossa parceira, a{" "}
+                        <b className="text-primary">Alloyal</b>.
+                      </p>
+                      <p>
+                        Ao continuar, você será direcionado para fora do
+                        ambiente do Bensaúde.
+                      </p>
+
+                      <Alert variant="default" className="bg-blue-50 border-blue-200">
+                        <Share2 className="h-4 w-4 text-blue-600" />
+                        <AlertTitle className="text-blue-800">
+                          Compartilhamento de Dados
+                        </AlertTitle>
+                        <AlertDescription className="text-blue-700 space-y-2">
+                          <p>
+                            Para que você seja identificado e acesse os
+                            benefícios, o Bensaúde compartilha com a Alloyal
+                            apenas:
+                          </p>
+                          <ul className="list-disc list-inside pl-4 font-medium">
+                            <li>Nome completo</li>
+                            <li>CPF</li>
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+
+                      <Alert variant="destructive" className="bg-yellow-50 border-yellow-200">
+                        <Info className="h-4 w-4 text-yellow-600" />
+                        <AlertTitle className="text-yellow-800">Importante</AlertTitle>
+                        <AlertDescription className="text-yellow-700">
+                          A partir do seu acesso ao ambiente da Alloyal, o tratamento dos seus dados passa a ser de responsabilidade deles, seguindo suas próprias políticas de privacidade.
+                        </AlertDescription>
+                      </Alert>
+                      <p className="text-xs text-center text-muted-foreground pt-2">
+                        Ao selecionar “OK”, você declara estar ciente e confirma o redirecionamento.
+                        informações e confirma o redirecionamento. Caso não
+                        queira prosseguir, basta clicar em “Cancelar”.
+                      </p>
+                    </div>
                   </DialogDescription>
                 ) : (
                   <DialogDescription className="pt-4">
@@ -138,18 +193,20 @@ export const Beneficios: React.FC = () => {
                 {!generatedLink ? (
                   <>
                     <DialogClose asChild>
-                      <Button variant="outline" disabled={isLoading}>
-                        Cancelar
+                      <Button variant="ghost" disabled={isLoading}>
+                        <X className="mr-2 h-4 w-4" /> Cancelar
                       </Button>
                     </DialogClose>
                     <Button onClick={handleAccessClub} disabled={isLoading}>
                       {isLoading ? (
                         <>
                           <LoadingSpinner className="mr-2 h-4 w-4 animate-spin" />
-                          Gerando acesso...
+                          Gerando...
                         </>
                       ) : (
-                        "Continuar"
+                        <>
+                          <Check className="mr-2 h-4 w-4" /> OK
+                        </>
                       )}
                     </Button>
                   </>
