@@ -303,6 +303,22 @@ export const Financial: React.FC = () => {
                     </div>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 w-full sm:w-auto pb-8 sm:pb-0">
                       {ehResponsavelFinanceiro && (
+                        <div className="hidden sm:flex">
+                          {p.status === "Pago" ? (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Pago</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80">
+                              <Clock className="h-3 w-3" />
+                              <span>Em Aberto</span>
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {ehResponsavelFinanceiro && (
                         <>
                           {p.status === "Pago" ? (
                             <Button variant="default" size="sm" onClick={() => handleDownloadBoleto(p)}>
@@ -333,20 +349,7 @@ export const Financial: React.FC = () => {
                               <span>Pago</span>
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
-                              <Clock className="h-3 w-3" />
-                              <span>Em Aberto</span>
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="hidden sm:flex">
-                          {p.status === "Pago" ? (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Pago</span>
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80">
                               <Clock className="h-3 w-3" />
                               <span>Em Aberto</span>
                             </Badge>

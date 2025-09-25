@@ -7,6 +7,7 @@ import {
   Info,
   FileText,
   UserCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { useResponsavelFinanceiro } from "@/hooks/usePermissao";
 
 type Step = "beneficiaries" | "verification" | "success";
 
@@ -36,6 +38,7 @@ export const SOS = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const isResponsavelFinanceiro = useResponsavelFinanceiro();
 
   const [step, setStep] = useState<Step>("beneficiaries");
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +53,7 @@ export const SOS = () => {
     useState<SOSConfirmContractResponse | null>(null);
 
   useEffect(() => {
-    const fetchBeneficiaries = async () => {
+    if (isResponsavelFinanceiro) {
       if (!user?.perfilAutenticado) {
         toast({
           title: "Erro de autenticação",
@@ -61,25 +64,28 @@ export const SOS = () => {
         return;
       }
 
-      try {
-        const response = await sosService.getSOSBeneficiaries({
-          perfilAutenticado: user.perfilAutenticado,
-        });
-        setSosData(response);
-      } catch (error: any) {
-        toast({
-          title: "Erro ao buscar beneficiários",
-          description:
-            error.message || "Não foi possível carregar os dados do SOS.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBeneficiaries();
-  }, [user, toast]);
+      const fetchBeneficiaries = async () => {
+        try {
+          const response = await sosService.getSOSBeneficiaries({
+            perfilAutenticado: user.perfilAutenticado,
+          });
+          setSosData(response);
+        } catch (error: any) {
+          toast({
+            title: "Erro ao buscar beneficiários",
+            description:
+              error.message || "Não foi possível carregar os dados do SOS.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchBeneficiaries();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user, toast, isResponsavelFinanceiro]);
 
   const handleBeneficiaryToggle = (codigo: string) => {
     setSelectedBeneficiaries((prev) =>
@@ -160,6 +166,35 @@ export const SOS = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (!isResponsavelFinanceiro) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
+          <div className="flex items-center space-x-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
+              <ShieldPlus className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Contratar SOS</h1>
+              <p className="text-muted-foreground text-lg">
+                Adquira o serviço de atendimento pré-hospitalar de urgência e
+                emergência.
+              </p>
+            </div>
+          </div>
+        </div>
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Acesso Restrito</AlertTitle>
+          <AlertDescription>
+            Apenas o responsável financeiro do contrato pode contratar novos
+            serviços.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
