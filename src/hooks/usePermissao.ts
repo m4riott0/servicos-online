@@ -4,8 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export const Perfis = {
   BENEFICIARIO_RESPONSAVEL_FINANCEIRO: "BENEFICIARIO RESPONSAVEL FINANCEIRO",
   RESPONSAVEL_FINANCEIRO_NAO_BENEFICIARIO: "RESPONSAVEL FINANCEIRO NAO BENEFICIARIO",
-  RESPONSAVEL_FINANCEIRO: "RESPONSAVEL FINANCEIRO",
-  BENEFICIARIO_DEPENDENTE: "BENEFICIARIO DEPENDENTE",
+  TITULAR: 'TITULAR',
 } as const;
 
 type PerfilUsuario = (typeof Perfis)[keyof typeof Perfis];
@@ -46,6 +45,6 @@ export function useResponsavelFinanceiro(): boolean {
   return usePermissao([
     Perfis.BENEFICIARIO_RESPONSAVEL_FINANCEIRO,
     Perfis.RESPONSAVEL_FINANCEIRO_NAO_BENEFICIARIO,
-    Perfis.RESPONSAVEL_FINANCEIRO,
+    Perfis.TITULAR
   ]);
 }
