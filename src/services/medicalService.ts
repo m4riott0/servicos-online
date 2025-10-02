@@ -31,7 +31,6 @@ export const medicalService = {
       const response = await apiClient.instance.get<ApiTypes.MedicalGuideProviderResponse[]>('/api/GuiaMedico/Prestadores', {
         params: req,
       });
-      // API retorna um array onde cada item contém "prestadores"
       return response.data.flatMap(item => item.prestadores || []);
     } catch (error) {
       console.warn('Chamada da API falhou (getMedicalProviders):', error);

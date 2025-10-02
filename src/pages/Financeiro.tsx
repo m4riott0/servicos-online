@@ -43,11 +43,21 @@ import {
   Barcode,
   Copy,
   QrCode,
+  ExternalLink,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { financeiroService } from "../services/financeiroService";
 import * as ApiTypes from "../types/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResponsavelFinanceiro } from "@/hooks/usePermissao";
+import { useCopart } from "@/hooks/useCopart";
+import { CopartTable } from "@/services/copartService";
+import { set } from "date-fns";
 
 export const Financial: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -58,6 +68,7 @@ export const Financial: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] =
     useState<ApiTypes.Installment | null>(null);
   const [copartModalOpen, setCopartModalOpen] = useState(false);
+  const [copartTable, setCopartTable] = useState("");
   const [coparticipacao, setCoparticipacao] = useState<any[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>(
     (currentYear - 1).toString()
@@ -67,7 +78,7 @@ export const Financial: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const ehResponsavelFinanceiro = useResponsavelFinanceiro();
-
+  const { ehCoparticipativo } = useCopart();
 
   // Carregar parcelas
   useEffect(() => {
@@ -93,7 +104,7 @@ export const Financial: React.FC = () => {
 
   // Listar IRPF
   useEffect(() => {
-    const fetchIrpfData = async () => {      
+    const fetchIrpfData = async () => {
       if (!user?.perfilAutenticado) {
         return;
       }
@@ -130,6 +141,35 @@ export const Financial: React.FC = () => {
       });
     } catch (err) {
       console.error("Erro ao baixar extrato IRPF:", err);
+    }
+  };
+
+  //tabela de copart
+  const handleCopartTable = async () => {
+    if (!user?.perfilAutenticado) return;
+
+    try {
+      const response = await CopartTable.copartTableRequest({
+        perfilAutenticado: user.perfilAutenticado,
+      });
+
+      if (response?.link) {
+        window.open(response.link, "_blank", "noopener,noreferrer");
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível obter o link da tabela.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao buscar tabela de coparticipação:", err);
+      toast({
+        title: "Erro",
+        description:
+          "Ocorreu um erro ao buscar a tabela de coparticipação. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -209,7 +249,7 @@ export const Financial: React.FC = () => {
       const url = window.URL.createObjectURL(new Blob([extrato]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "extrato_coparticipacao.pdf"); 
+      link.setAttribute("download", "extrato_coparticipacao.pdf");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -219,7 +259,7 @@ export const Financial: React.FC = () => {
         description: "Você não possui uma conta coparticipativa",
         variant: "destructive",
       }),
-      console.error("Erro ao consultar extrato:", err);
+        console.error("Erro ao consultar extrato:", err);
     }
   };
 
@@ -252,16 +292,34 @@ export const Financial: React.FC = () => {
         <TabsContent value="invoices" className="space-y-6">
           <Card className="card-medical">
             <CardHeader>
-              <CardTitle>
-                {ehResponsavelFinanceiro
-                  ? "Parcelas dos últimos 12 meses"
-                  : "Extratos de Coparticipação"}
-              </CardTitle>
-              <CardDescription>
-                {ehResponsavelFinanceiro
-                  ? "Visualize e gerencie suas mensalidades"
-                  : "Baixe seus extratos de coparticipação por competência"}
-              </CardDescription>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
+                  <CardTitle>
+                    {ehResponsavelFinanceiro
+                      ? "Parcelas dos últimos 12 meses"
+                      : "Extratos de Coparticipação"}
+                  </CardTitle>
+                  <CardDescription>
+                    {ehResponsavelFinanceiro
+                      ? "Visualize e gerencie suas mensalidades"
+                      : "Baixe seus extratos de coparticipação por competência"}
+                  </CardDescription>
+                </div>
+
+                {ehCoparticipativo && (
+                  <Button
+                    asChild
+                    onClick={handleCopartTable}
+                    variant="outline"
+                    className="w-full sm:w-auto bg-blue-400 hover:bg-blue-400/80 text-white"
+                  >
+                    <a href="#">
+                      <ExternalLink className="mr-2 h-4 w-4" /> Tabela de
+                      Coparticipação
+                    </a>
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -305,12 +363,18 @@ export const Financial: React.FC = () => {
                       {ehResponsavelFinanceiro && (
                         <div className="hidden sm:flex">
                           {p.status === "Pago" ? (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
+                            <Badge
+                              variant="outline"
+                              className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
+                            >
                               <CheckCircle className="h-3 w-3" />
                               <span>Pago</span>
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80">
+                            <Badge
+                              variant="outline"
+                              className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80"
+                            >
                               <Clock className="h-3 w-3" />
                               <span>Em Aberto</span>
                             </Badge>
@@ -321,41 +385,71 @@ export const Financial: React.FC = () => {
                       {ehResponsavelFinanceiro && (
                         <>
                           {p.status === "Pago" ? (
-                            <Button variant="default" size="sm" onClick={() => handleDownloadBoleto(p)}>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleDownloadBoleto(p)}
+                            >
                               <Download className="h-4 w-4 mr-2" /> Ver Recibo
                             </Button>
                           ) : (
-                            <Button variant="default" size="sm" onClick={() => handlePayClick(p)}>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handlePayClick(p)}
+                            >
                               <Barcode className="h-4 w-4 mr-2" /> Pagar Fatura
                             </Button>
                           )}
                         </>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExtratoCoPart(p)}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        {ehResponsavelFinanceiro
-                          ? "Extrato Copart"
-                          : "Baixar Extrato"}
-                      </Button>
-                      {ehResponsavelFinanceiro && (<>
-                        <div className="absolute bottom-2 right-2 sm:hidden">
-                          {p.status === "Pago" ? (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80">
-                              <CheckCircle className="h-3 w-3" />
-                              <span>Pago</span>
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80">
-                              <Clock className="h-3 w-3" />
-                              <span>Em Aberto</span>
-                            </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span tabIndex={0}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleExtratoCoPart(p)}
+                                disabled={!ehCoparticipativo}
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                {ehResponsavelFinanceiro
+                                  ? "Extrato Copart"
+                                  : "Baixar Extrato"}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {!ehCoparticipativo && (
+                            <TooltipContent>
+                              Seu plano não é coparticipativo.
+                            </TooltipContent>
                           )}
-                        </div>
-                      </>)}
+                        </Tooltip>
+                      </TooltipProvider>
+                      {ehResponsavelFinanceiro && (
+                        <>
+                          <div className="absolute bottom-2 right-2 sm:hidden">
+                            {p.status === "Pago" ? (
+                              <Badge
+                                variant="outline"
+                                className="flex items-center space-x-1 border-transparent bg-blue-600 text-blue-50 hover:bg-blue-600/80"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                <span>Pago</span>
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="flex items-center space-x-1 border-transparent bg-yellow-500 text-yellow-50 hover:bg-yellow-500/80"
+                              >
+                                <Clock className="h-3 w-3" />
+                                <span>Em Aberto</span>
+                              </Badge>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -24,12 +24,14 @@ export interface ApiResponse<T = any> {
 }
 
 export interface User {
+  coparticipativo: boolean;
   id: string;
   nome: string;
   cpf: number;
   email: string;
   celular: string;
   perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string;
   codigoPlano?: number;
   codigoContrato?: number;
   ehBeneficiary?: boolean;
@@ -151,7 +153,7 @@ export interface AccountProfile {
   email?: string;
   celular?: string;
   perfilAutenticado?: PerfilAutenticado;
-  dataCancelamento?: string; 
+  dataCancelamento?: string;
   dataInicioVigencia?: string;
   tipoPerfil: string;
   visualizaExtrato: boolean;
@@ -279,7 +281,6 @@ export interface MedicalGuideProduct {
   descricao: string;
   tipoContrato: number;
 }
-
 
 //==================================================================================================================
 //                                        Autorizações types
@@ -500,4 +501,49 @@ export interface Installment {
   anocompetencia?: number;
   tipoReceita?: string;
   dataEmissao?: string;
+}
+
+//==================================================================================================================
+//                                        Utilizacao types
+//==================================================================================================================
+
+export interface BeneficiariosUtilizacaoRequest {
+  perfilAutenticado: PerfilAutenticado;
+}
+
+export interface HistoricoUtilizacaoRequest {
+  perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string;
+}
+
+export interface AvaliarAtendimentoRequest {
+  perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string;
+  codigoPrestador: number;
+  data: string;
+  nota: number;
+  comentario: string;
+}
+
+export interface HistoricoUtilizacaoItem {
+  nomePrestador: string;
+  codigoPrestador: number;
+  data: string;
+  endereco: string;
+  temAvaliacao: string;
+  nota: number;
+  comentario: string;
+  codigoBeneficiario: string;
+}
+
+//==================================================================================================================
+//                                        tabela copart types
+//==================================================================================================================
+
+export interface CopartTableRequest {
+  perfilAutenticado: PerfilAutenticado;
+}
+
+export interface CopartTableItem {
+  link: string;
 }

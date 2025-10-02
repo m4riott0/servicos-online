@@ -1,110 +1,101 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { User, FileSpreadsheet } from "lucide-react";
-import { format } from "date-fns";
-
-const DataItem: React.FC<{ label: string; value?: string | number | null }> = ({
-  label,
-  value,
-}) => (
-  <div className="p-4 bg-muted/50 rounded-lg">
-    <p className="text-sm text-muted-foreground">{label}</p>
-    <p className="text-lg font-semibold">{value || "Não informado"}</p>
-  </div>
-);
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, CreditCard, FileText, User } from "lucide-react";
+import Banner from '@/assets/banner.png'
+import Autoplay from "embla-carousel-autoplay";
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
 
   return (
     <div className="space-y-8">
-      {/* <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
+      <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
-              Olá, {user?.nome?.split(" ")[0]}!
-            </h1>
+            <h1 className="text-3xl font-bold mb-2">Olá, {user?.nome}</h1>
             <p className="text-muted-foreground text-lg">
               Gerencie seus benefícios de saúde com facilidade
             </p>
           </div>
         </div>
-      </div> */}
+      </div>
 
-      {/* Dados Pessoais */}
       <Card className="card-medical">
         <CardHeader>
-          <div className="flex items-center space-x-3">
+          <CardTitle>Seus Dados Principais</CardTitle>
+          <CardDescription>
+            Um resumo das suas informações mais importantes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex items-center space-x-4 rounded-md border p-4">
+            <CreditCard className="h-6 w-6 text-primary" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">Carteirinha</p>
+              <p className="text-sm text-muted-foreground">{user?.numeroCarteirinha || "Não informado"}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 rounded-md border p-4">
             <User className="h-6 w-6 text-primary" />
-            <CardTitle className="text-xl">Dados Pessoais</CardTitle>
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">CPF</p>
+              <p className="text-sm text-muted-foreground">{user?.cpf || "Não informado"}</p>
+            </div>
           </div>
-          <CardDescription>Suas informações de cadastro.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DataItem label="Nome" value={user?.nome} />
-          <DataItem
-            label="Data de Nascimento"
-            value={
-              user?.dataNascimento
-                ? format(new Date(user.dataNascimento), "dd/MM/yyyy")
-                : null
-            }
-          />
-          <DataItem label="Sexo" value={user?.sexo} />
-          <DataItem label="Nome da Mãe" value={user?.nomeMae} />
-          <DataItem label="CPF" value={user?.cpf} />
-          <DataItem label="RG" value={user?.rg} />
-          <DataItem label="Órgão Emissor do RG" value={user?.orgaoEmissorRg} />
-          <DataItem
-            label="Cartão Nacional de Saúde"
-            value={user?.cartaoNacionalSaude}
-          />
-          <DataItem label="Título de Eleitor" value={user?.tituloEleitor} />
-          <DataItem label="Estado Civil" value={user?.estadoCivil} />
-          <DataItem label="Profissão" value={user?.profissao} />
-          <DataItem label="PIS/PASEP" value={user?.pisPasep} />
-        </CardContent>
-      </Card>
-
-      {/* Dados Contratuais */}
-      <Card className="card-medical">
-        <CardHeader>
-          <div className="flex items-center space-x-3">
-            <FileSpreadsheet className="h-6 w-6 text-primary" />
-            <CardTitle className="text-xl">Detalhes do Contrato</CardTitle>
+          <div className="flex items-center space-x-4 rounded-md border p-4">
+            <FileText className="h-6 w-6 text-primary" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none">Nº do Contrato</p>
+              <p className="text-sm text-muted-foreground">{user?.codigoContrato || "Não informado"}</p>
+            </div>
           </div>
-          <CardDescription>Informações sobre seu plano.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DataItem label="Número do Contrato" value={user?.codigoContrato} />
-          <DataItem label="Número da Carteirinha" value={user?.numeroCarteirinha} />
-          <DataItem
-            label="Data de Contratação"
-            value={
-              user?.dataContratacao
-                ? format(new Date(user.dataContratacao), "dd/MM/yyyy")
-                : null
-            }
-          />
-          <DataItem label="Padrão de Acomodação" value={user?.padraoAcomodacao} />
-          <DataItem label="Tipo de Contratação" value={user?.tipoContratacao} />
-          <DataItem label="Produto Contratado" value={user?.produtoContratado} />
-          <DataItem
-            label="Segmentação Assistencial"
-            value={user?.segmentacaoAssistencial}
-          />
-          <DataItem label="Data Final da CPT" value={user?.dataFinalCPT} />
-          {/* Para carências, pode ser necessário um componente mais complexo */}
-          <DataItem label="Carências" value={"Verificar"} />
         </CardContent>
+        <CardFooter>
+          <Button asChild className="w-full sm:w-auto">
+            <Link to="/contrato">
+              Ver todos os dados
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardFooter>
       </Card>
+      <div className="w-full max-h-64 overflow-hidden rounded-xl">
+        <Carousel
+          plugins={[
+            Autoplay({
+              delay: 3000,
+              stopOnInteraction: true,
+            }),
+          ]}
+          className="w-full"
+          opts={{
+            loop: true,
+          }}
+        >
+          <CarouselContent>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <CarouselItem key={index}>
+                <img src={Banner} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </div>
     </div>
   );
 };

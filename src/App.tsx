@@ -19,6 +19,8 @@ import { MedicinaPreventiva } from "./pages/MedicinaPreventiva";
 import { SOS } from "./pages/Sos";
 import { Ortopedico } from "./pages/ortopedico";
 import { ANS } from "./pages/ANS";
+import { Utilizacao } from "./pages/utilizacao";
+import { DadosContrato } from "./pages/DadosContrato";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +82,14 @@ const App = () => (
 
             <Route path="/ANS" element={<Layout />}>
               <Route index element={<ANS />} />
+            </Route>
+
+            <Route path="/utilizacao" element={<Layout />}>
+              <Route index element={<Utilizacao />} />
+            </Route>
+
+            <Route path="/contrato" element={<Layout />}>
+              <Route index element={<DadosContrato />} />
             </Route>
 
             {/* Fallback */}

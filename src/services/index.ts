@@ -9,3 +9,6 @@ export * from './sosService';
 export * from './orthopedicService';
 export * from './financeiroService';
 export * from './medicinaPreventiva';
+export * from './utilizacaoService';
+export * from './copartService';
+

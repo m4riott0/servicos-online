@@ -9,6 +9,7 @@ import {
   BadgeDollarSign,
   Tag,
   BookMarked,
+  Monitor,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -37,6 +38,11 @@ export const navigation: NavItem[] = [
     icon: CreditCard,
   },
   {
+    name: "Tabela de utilização",
+    href: "/utilizacao",
+    icon: Monitor,
+  },
+  {
     name: "Comercial", 
     href: "/comercial",
     icon: BadgeDollarSign ,
@@ -60,6 +66,11 @@ export const navigation: NavItem[] = [
     name: "Dados ANS",
     href: "/ANS",
     icon: BookMarked,
+  },
+  {
+    name: "Contrato",
+    href: "/contrato",
+    icon: FileText,
   }
 ];
 
