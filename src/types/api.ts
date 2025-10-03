@@ -550,6 +550,7 @@ export interface ListaUtilizacaoResponse {
 
 export interface CopartTableRequest {
   perfilAutenticado: PerfilAutenticado;
+  codigoBeneficiario: string;
 }
 
 export interface CopartTableItem {

@@ -151,6 +151,7 @@ export const Financial: React.FC = () => {
     try {
       const response = await CopartTable.copartTableRequest({
         perfilAutenticado: user.perfilAutenticado,
+        codigoBeneficiario: user.codigoBeneficiario,
       });
 
       if (response?.link) {
