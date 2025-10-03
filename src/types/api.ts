@@ -511,7 +511,7 @@ export interface BeneficiariosUtilizacaoRequest {
   perfilAutenticado: PerfilAutenticado;
 }
 
-export interface HistoricoUtilizacaoRequest {
+export interface ListUtilizacaoRequest {
   perfilAutenticado: PerfilAutenticado;
   codigoBeneficiario: string;
 }
@@ -525,16 +525,24 @@ export interface AvaliarAtendimentoRequest {
   comentario: string;
 }
 
-export interface HistoricoUtilizacaoItem {
-  nomePrestador: string;
-  codigoPrestador: number;
+export interface UtilizacaoItem {
+  valor: number;
+  fantasia: string;
+  categoria: string;
+  procedimento: number;
+  descricao: string;
   data: string;
-  endereco: string;
-  temAvaliacao: string;
-  nota: number;
-  comentario: string;
-  codigoBeneficiario: string;
+  local:string;
+  jaAvaliado?: boolean;
 }
+
+export interface ListaUtilizacaoResponse {
+  semestre: number;
+  ano: number;
+  procedimentos: UtilizacaoItem[];
+  erro?: string;
+}
+
 
 //==================================================================================================================
 //                                        tabela copart types
