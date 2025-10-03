@@ -151,7 +151,7 @@ export const AuthLogin: React.FC<AuthLoginProps> = ({
               <p className="text-muted-foreground mt-1">
                 Olá,{" "}
                 <span className="font-semibold">
-                  {userInfo.nome.split(" ")[0]}
+                  {userInfo.nome}
                 </span>
                 !
               </p>

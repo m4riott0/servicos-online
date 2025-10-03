@@ -31,16 +31,4 @@ export const utilizacaoService = {
   return response.data.procedimentos ?? [];
 }
 
-
-
-//   getListaUtilizacao: async (
-//     req: ApiTypes.ListUtilizacaoRequest
-//   ): Promise<ApiTypes.ListaUtilizacaoResponse> => {
-//     const response =
-//       await apiClient.instance.post<ApiTypes.ListaUtilizacaoResponse>(
-//         "/api/Utilizacao/ListarUtilizacao",
-//         req
-//       );
-//     return response.data;
-//   },
 };

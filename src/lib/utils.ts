@@ -16,8 +16,9 @@ export function maskEmail(email: string): string {
 
 export function maskCelular(celular: string): string {
   if (!celular) return "";
-  return celular.length >= 11
-    ? celular.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-****")
+  const cleaned = celular.replace(/\D/g, "");
+  return cleaned.length >= 11
+    ? cleaned.replace(/(\d{2})(\d{5})(\d{4})/, "($1) *****-$3")
     : celular;
 }
 

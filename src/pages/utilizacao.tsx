@@ -196,7 +196,7 @@ export const Utilizacao: React.FC = () => {
       });
       return;
     }
-
+    
     setIsSubmitting(true);
     try {
       await utilizacaoService.avaliarAtendimento({
