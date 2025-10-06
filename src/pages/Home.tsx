@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -13,17 +13,39 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CreditCard, FileText, User } from "lucide-react";
-import Banner from '@/assets/banner.png'
+import Banner2 from '@/assets/banner2.png'
+import Banner4 from '@/assets/banner4.png'
 import Autoplay from "embla-carousel-autoplay";
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap())
+
+    api.on("select", () => setCurrent(api.selectedScrollSnap()))
+  }, [api])
+
+  const plugin = React.useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
+  const banners = [ Banner2, Banner4];
 
   return (
     <div className="space-y-8">
+      {/* Seção de Boas-vindas */}
       <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center justify-between">
           <div>
@@ -35,6 +57,7 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
+      {/* Card de Dados Principais */}
       <Card className="card-medical">
         <CardHeader>
           <CardTitle>Seus Dados Principais</CardTitle>
@@ -74,27 +97,43 @@ export const Home: React.FC = () => {
           </Button>
         </CardFooter>
       </Card>
-      <div className="w-full max-h-64 overflow-hidden rounded-xl">
+      
+      {/* Carrossel de Banners */}
+      <div className="w-full max-w-[1800px] mx-auto">
         <Carousel
+          setApi={setApi}
           plugins={[
-            Autoplay({
-              delay: 3000,
-              stopOnInteraction: true,
-            }),
+            plugin.current
           ]}
-          className="w-full"
+          className="relative rounded-xl group"
           opts={{
             loop: true,
           }}
+          onMouseEnter={() => plugin.current.stop()}
+          onMouseLeave={() => plugin.current.play()}
         >
           <CarouselContent>
-            {Array.from({ length: 3 }).map((_, index) => (
+            {banners.map((banner, index) => (
               <CarouselItem key={index}>
-                <img src={Banner} alt={`Banner ${index + 1}`} className="w-full h-full object-cover" />
+                <div className="overflow-hidden rounded-lg h-[300px]">
+                  <img src={banner} alt={`Banner ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                </div>
               </CarouselItem>
             ))}
           </CarouselContent>
         </Carousel>
+        {/* Indicadores de Pontos (Dots) */}
+        <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: count }).map((_, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="icon"
+              className={`h-2 w-2 rounded-full p-0 transition-colors ${index === current ? 'bg-primary' : 'bg-muted hover:bg-muted-foreground/50'}`}
+              onClick={() => api?.scrollTo(index)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   Tag,
   BookMarked,
   Monitor,
+  ShieldPlus,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -48,7 +49,7 @@ export const navigation: NavItem[] = [
     icon: BadgeDollarSign ,
   },
   {
-    name: "Guia Médico", 
+    name: "Guia Médico",
     href: "/guia-medico",
     icon: Stethoscope,
   },
@@ -56,6 +57,11 @@ export const navigation: NavItem[] = [
     name: "Medicina Preventiva", 
     href: "/medicina-preventiva",
     icon: HeartPulse,
+  },
+  {
+    name: "Telemedicina",
+    href: "https://telemedicina.bensaude.com.br/",
+    icon: ShieldPlus,
   },
   {
     name: "Clube de benefícios",

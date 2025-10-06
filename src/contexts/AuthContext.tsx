@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { authService } from "../services/authService";
 import { apiClient } from "../services/apiClient";
 import { registerService } from "../services/registerService";
@@ -10,7 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (cpf: number, senha: string, perfil: AccountProfile) => Promise<boolean>;
-  logout: () => void;
+  logout: (showToast?: boolean) => void;
   verificaCPF: (cpf: number) => Promise<CPFVerificationResponse | null>;
   register: (cpf: number, senha: string) => Promise<boolean>;
   createAccount: (cpf: number) => Promise<boolean>;
@@ -41,9 +41,68 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const SESSION_DURATION = 30 * 60 * 1000; 
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); 
   const { toast } = useToast();
+
+  // Expira a sessão do usuário após o tempo definido
+  const expirarSessao = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionExpiresAt");
+    apiClient.clearToken();
+    apiClient.renewToken();
+    toast({
+      title: "Sessão encerrada",
+      description: "Sua sessão expirou por inatividade.",
+    });
+  }, [toast]);
+
+  // Encerra a sessão do usuário
+  const logout = useCallback((showToast = true) => {
+    setUser(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("sessionExpiresAt");
+    apiClient.clearToken();
+    apiClient.renewToken();
+    if (showToast) {
+      toast({
+        title: "Você saiu",
+        description: "Sua sessão foi encerrada com segurança.",
+      });
+    }
+  }, [toast]);
+
+  // Carrega o usuário do localStorage ao iniciar o app
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const expiresAt = localStorage.getItem("sessionExpiresAt");
+
+    if (storedUser && expiresAt) {
+      if (new Date().getTime() < JSON.parse(expiresAt)) {
+        setUser(JSON.parse(storedUser));
+      } else {
+        expirarSessao();
+      }
+    }
+    setIsLoading(false);
+  }, [expirarSessao]);
+
+  // Monitora atividade do usuário para resetar o timer de expiração
+  useEffect(() => {
+    const handleActivity = () => {
+      if (user) {
+        localStorage.setItem("sessionExpiresAt", JSON.stringify(new Date().getTime() + SESSION_DURATION));
+      }
+    };
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+    };
+  }, [user, SESSION_DURATION]);
 
   const isAuthenticated = !!user;
 
@@ -137,6 +196,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
       
       setUser(userData);
+      // Persiste o usuário e o tempo de expiração da sessão
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("sessionExpiresAt", JSON.stringify(new Date().getTime() + SESSION_DURATION));
 
       toast({
         title: "Login realizado com sucesso",
@@ -337,17 +399,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [toast]);
 
-  // Remove dados do usuário da sessão
-  const logout = useCallback(() => {
-    setUser(null);
-    apiClient.clearToken();
-    apiClient.renewToken();
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado com sucesso.",
-    });
-  }, [toast]);
-
   const value = useMemo(
     () => ({
       user,
@@ -362,7 +413,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       confirmContact,
       resendSMS,
     }),
-    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS]
+    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS, expirarSessao]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
