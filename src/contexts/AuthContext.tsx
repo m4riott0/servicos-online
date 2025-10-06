@@ -67,12 +67,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("sessionExpiresAt");
     apiClient.clearToken();
-    await apiClient.renewToken();
+    // await apiClient.renewToken(); // Geralmente não é necessário renovar token ao expirar/sair.
     toast({
       title: "Sessão encerrada",
       description: "Sua sessão expirou por inatividade.",
     });
-  }, [toast]);
+  }, [toast, apiClient]);
 
   // Encerra a sessão do usuário
   const logout = useCallback(
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("sessionExpiresAt");
       apiClient.clearToken();
-      await apiClient.renewToken();
+      // await apiClient.renewToken(); // Geralmente não é necessário renovar token ao expirar/sair.
       if (showToast) {
         toast({
           title: "Você saiu",
@@ -89,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       }
     },
-    [toast]
+    [toast, apiClient]
   );
 
   // Carrega o usuário do localStorage ao iniciar o app
@@ -137,7 +137,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [user, expirarSessao]);
+  }, [user, expirarSessao]); // expirarSessao já tem suas dependências
 
   const isAuthenticated = !!user;
 
@@ -168,8 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       senha: string,
       perfil: AccountProfile
     ): Promise<boolean> => {
-      console.log("testando o grande teste dos teste");
-
+      setIsLoading(true);
       try {
         const authResponse = await authService.authenticate({
           codigoPlano: perfil.codigoPlano,
@@ -193,7 +192,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         const verificationResponse = await authService.verificaCPF({ cpf });
-        const ehBeneficiary = verificationResponse?.beneficiario ?? false;
+        if (!verificationResponse) {
+          // A função verificaCPF já mostra um toast de erro, então apenas retornamos.
+          return false;
+        }
+        const ehBeneficiary = verificationResponse.beneficiario;
+
+        const sessao = authResponse.codigoSessao
+          ? authResponse.codigoSessao
+          : perfil.perfilAutenticado?.codigoSessao;
 
         const userData = {
           id: cpf.toString(),
@@ -201,13 +208,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           cpf,
           email: authResponse.email || perfil.email || "",
           celular: authResponse.celular || perfil.celular || "",
-          perfilAutenticado: (() => {
-            const sessao = authResponse.codigoSessao
-              ? authResponse.codigoSessao
-              : perfil.perfilAutenticado?.codigoSessao;
-
-            return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
-          })(),
+          perfilAutenticado:
+            sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null,
           codigoPlano: perfil.codigoPlano,
           codigoContrato: perfil.codigoContrato,
           ehBeneficiary: ehBeneficiary,
@@ -218,12 +220,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           produtoContratado: authResponse.produtos?.[0]?.nome,
           dataContratacao: authResponse.produtos?.[0]?.dataInicioVigencia,
           coparticipativo: authResponse.produtos?.[0]?.coparticipativo ?? false,
-          padraoAcomodacao:
-            authResponse.beneficiariosAssociados?.[0]?.padraoConforto,
+          padraoAcomodacao: authResponse.beneficiariosAssociados?.[0]?.padraoConforto,
+          codigoBeneficiario: authResponse.codigoBeneficiario,
           sexo: undefined,
           nomeMae: undefined,
           rg: undefined,
-          codigoBeneficiario: authResponse.codigoBeneficiario,
           orgaoEmissorRg: undefined,
           cartaoNacionalSaude: undefined,
           tituloEleitor: undefined,
@@ -289,10 +290,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         return false;
       } finally {
-        // setIsLoading(false);
+        setIsLoading(false);
       }
     },
-    [toast]
+    [toast, SESSION_DURATION]
   );
 
   // Cadastra senha para o usuário
