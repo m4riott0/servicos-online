@@ -427,7 +427,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       confirmContact,
       resendSMS,
     }),
-    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS, expirarSessao]
+    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
