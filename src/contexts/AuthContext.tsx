@@ -1,15 +1,30 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import { authService } from "../services/authService";
 import { apiClient } from "../services/apiClient";
 import { registerService } from "../services/registerService";
-import type { User, CPFVerificationResponse, AccountProfile } from "../types/api";
+import type {
+  User,
+  CPFVerificationResponse,
+  AccountProfile,
+} from "../types/api";
 import { useToast } from "../hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (cpf: number, senha: string, perfil: AccountProfile) => Promise<boolean>;
+  login: (
+    cpf: number,
+    senha: string,
+    perfil: AccountProfile
+  ) => Promise<boolean>;
   logout: (showToast?: boolean) => void;
   verificaCPF: (cpf: number) => Promise<CPFVerificationResponse | null>;
   register: (cpf: number, senha: string) => Promise<boolean>;
@@ -43,16 +58,16 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const SESSION_DURATION = 30 * 60 * 1000;
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Expira a sessão do usuário após o tempo definido
-  const expirarSessao = useCallback(() => {
+  const expirarSessao = useCallback(async () => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("sessionExpiresAt");
     apiClient.clearToken();
-    apiClient.renewToken();
+    await apiClient.renewToken();
     toast({
       title: "Sessão encerrada",
       description: "Sua sessão expirou por inatividade.",
@@ -60,19 +75,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [toast]);
 
   // Encerra a sessão do usuário
-  const logout = useCallback((showToast = true) => {
-    setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("sessionExpiresAt");
-    apiClient.clearToken();
-    apiClient.renewToken();
-    if (showToast) {
-      toast({
-        title: "Você saiu",
-        description: "Sua sessão foi encerrada com segurança.",
-      });
-    }
-  }, [toast]);
+  const logout = useCallback(
+    async (showToast = true) => {
+      setUser(null);
+      localStorage.removeItem("user");
+      localStorage.removeItem("sessionExpiresAt");
+      apiClient.clearToken();
+      await apiClient.renewToken();
+      if (showToast) {
+        toast({
+          title: "Você saiu",
+          description: "Sua sessão foi encerrada com segurança.",
+        });
+      }
+    },
+    [toast]
+  );
 
   // Carrega o usuário do localStorage ao iniciar o app
   useEffect(() => {
@@ -93,7 +111,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const handleActivity = () => {
       if (user) {
-        localStorage.setItem("sessionExpiresAt", JSON.stringify(new Date().getTime() + SESSION_DURATION));
+        localStorage.setItem(
+          "sessionExpiresAt",
+          JSON.stringify(new Date().getTime() + SESSION_DURATION)
+        );
       }
     };
     window.addEventListener("mousemove", handleActivity);
@@ -113,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           expirarSessao();
         }
       }
-    }, 1000); 
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [user, expirarSessao]);
@@ -121,297 +142,321 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!user;
 
   // Verifica se o CPF já existe no sistema
-  const verificaCPF = useCallback(async (
-    cpf: number
-  ): Promise<CPFVerificationResponse | null> => {
-    try {
-      setIsLoading(true);
-      return await authService.verificaCPF({ cpf });
-    } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error?.response?.data?.erro || "Erro ao verificar CPF.",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+  const verificaCPF = useCallback(
+    async (cpf: number): Promise<CPFVerificationResponse | null> => {
+      try {
+        setIsLoading(true);
+        return await authService.verificaCPF({ cpf });
+      } catch (error: any) {
+        toast({
+          title: "Erro",
+          description: error?.response?.data?.erro || "Erro ao verificar CPF.",
+          variant: "destructive",
+        });
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [toast]
+  );
 
   // Realiza login validando perfis e sessão
-  const login = useCallback(async (cpf: number, senha: string, perfil: AccountProfile): Promise<boolean> => {
-    console.log('testando o grande teste dos teste')
+  const login = useCallback(
+    async (
+      cpf: number,
+      senha: string,
+      perfil: AccountProfile
+    ): Promise<boolean> => {
+      console.log("testando o grande teste dos teste");
 
-    try {
+      try {
+        const authResponse = await authService.authenticate({
+          codigoPlano: perfil.codigoPlano,
+          codigoContrato: perfil.codigoContrato,
+          cpf,
+          senha,
+        });
 
-      const authResponse = await authService.authenticate({
-        codigoPlano: perfil.codigoPlano,
-        codigoContrato: perfil.codigoContrato,
-        cpf,
-        senha,
-      });
+        const isSuccess =
+          authResponse &&
+          (authResponse.sucesso === true ||
+            (authResponse.codigoSessao && authResponse.nome));
 
-      const isSuccess =
-        authResponse &&
-        (authResponse.sucesso === true ||
-          (authResponse.codigoSessao && authResponse.nome));
+        if (!isSuccess) {
+          toast({
+            title: "CPF ou senha inválidos",
+            description: "Verifique suas credenciais e tente novamente.",
+            variant: "destructive",
+          });
+          return false;
+        }
 
-      if (!isSuccess) {
+        const verificationResponse = await authService.verificaCPF({ cpf });
+        const ehBeneficiary = verificationResponse?.beneficiario ?? false;
+
+        const userData = {
+          id: cpf.toString(),
+          nome: authResponse.nome || perfil.nome || "Usuário",
+          cpf,
+          email: authResponse.email || perfil.email || "",
+          celular: authResponse.celular || perfil.celular || "",
+          perfilAutenticado: (() => {
+            const sessao = authResponse.codigoSessao
+              ? authResponse.codigoSessao
+              : perfil.perfilAutenticado?.codigoSessao;
+
+            return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
+          })(),
+          codigoPlano: perfil.codigoPlano,
+          codigoContrato: perfil.codigoContrato,
+          ehBeneficiary: ehBeneficiary,
+          tipoPerfil: authResponse.tipoPerfil,
+          // Dados Pessoais e Contratuais
+          dataNascimento: authResponse.dataNascimento,
+          numeroCarteirinha: authResponse.codigoBeneficiario,
+          produtoContratado: authResponse.produtos?.[0]?.nome,
+          dataContratacao: authResponse.produtos?.[0]?.dataInicioVigencia,
+          coparticipativo: authResponse.produtos?.[0]?.coparticipativo ?? false,
+          padraoAcomodacao:
+            authResponse.beneficiariosAssociados?.[0]?.padraoConforto,
+          sexo: undefined,
+          nomeMae: undefined,
+          rg: undefined,
+          codigoBeneficiario: authResponse.codigoBeneficiario,
+          orgaoEmissorRg: undefined,
+          cartaoNacionalSaude: undefined,
+          tituloEleitor: undefined,
+          estadoCivil: undefined,
+          profissao: undefined,
+          pisPasep: undefined,
+          tipoContratacao: undefined,
+          segmentacaoAssistencial: undefined,
+          dataFinalCPT: undefined,
+          carencias: undefined,
+        };
+
+        setUser(userData);
+        // Persiste o usuário e o tempo de expiração da sessão
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem(
+          "sessionExpiresAt",
+          JSON.stringify(new Date().getTime() + SESSION_DURATION)
+        );
+
         toast({
-          title: "CPF ou senha inválidos",
-          description: "Verifique suas credenciais e tente novamente.",
+          title: "Login realizado com sucesso",
+          description: `Bem-vindo, ${perfil.nome?.split(" ")[0] || "Usuário"}!`,
+        });
+        return true;
+      } catch (error: any) {
+        let errorTitle = "Erro de conexão";
+        let errorDescription =
+          "Não foi possível conectar ao servidor. Tente novamente.";
+
+        if (error.response) {
+          const status = error.response.status;
+
+          switch (status) {
+            case 401:
+              errorTitle = "CPF ou senha inválidos";
+              errorDescription =
+                "Verifique suas credenciais e tente novamente.";
+              break;
+            case 400:
+              errorTitle = "Dados inválidos";
+              errorDescription = "Verifique os dados informados.";
+              break;
+            case 500:
+              errorTitle = "Erro do servidor";
+              errorDescription =
+                "Erro interno do servidor. Tente novamente em alguns minutos.";
+              break;
+            default:
+              errorTitle = "Erro inesperado";
+              errorDescription = `Erro ${status}. Tente novamente.`;
+          }
+        } else if (error.code === "NETWORK_ERROR") {
+          errorTitle = "Erro de rede";
+          errorDescription = "Verifique sua conexão com a internet.";
+        }
+
+        toast({
+          title: errorTitle,
+          description: errorDescription,
+          variant: "destructive",
+        });
+
+        return false;
+      } finally {
+        // setIsLoading(false);
+      }
+    },
+    [toast]
+  );
+
+  // Cadastra senha para o usuário
+  const register = useCallback(
+    async (cpf: number, senha: string): Promise<boolean> => {
+      try {
+        setIsLoading(true);
+        const response = await registerService.registerPassword({ cpf, senha });
+        toast({
+          title: "Conta criada com sucesso",
+          description: "Acesse o sistema!",
+        });
+        return true;
+      } catch {
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
+          variant: "destructive",
+        });
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [toast]
+  );
+
+  // Cria conta inicial (sem senha ainda)
+  const createAccount = useCallback(
+    async (cpf: number): Promise<boolean> => {
+      try {
+        const response = await registerService.createAccount({ cpf });
+
+        toast({
+          title: "Conta criada com sucesso",
+          description: "Conta criada com sucesso!",
+        });
+        return true;
+      } catch {
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
           variant: "destructive",
         });
         return false;
       }
-
-      const verificationResponse = await authService.verificaCPF({ cpf });
-      const ehBeneficiary = verificationResponse?.beneficiario ?? false;
-
-      const userData = {
-        id: cpf.toString(),
-        nome: authResponse.nome || perfil.nome || "Usuário",
-        cpf,
-        email: authResponse.email || perfil.email || "",
-        celular: authResponse.celular || perfil.celular || "",
-        perfilAutenticado: (() => {
-          const sessao = authResponse.codigoSessao
-            ? authResponse.codigoSessao
-            : perfil.perfilAutenticado?.codigoSessao;
-
-          return sessao && !isNaN(sessao) ? { codigoSessao: sessao } : null;
-        })(),
-        codigoPlano: perfil.codigoPlano,
-        codigoContrato: perfil.codigoContrato,
-        ehBeneficiary: ehBeneficiary,
-        tipoPerfil: authResponse.tipoPerfil,
-        // Dados Pessoais e Contratuais
-        dataNascimento: authResponse.dataNascimento,
-        numeroCarteirinha: authResponse.codigoBeneficiario,
-        produtoContratado: authResponse.produtos?.[0]?.nome,
-        dataContratacao: authResponse.produtos?.[0]?.dataInicioVigencia,
-        coparticipativo: authResponse.produtos?.[0]?.coparticipativo ?? false,
-        padraoAcomodacao: authResponse.beneficiariosAssociados?.[0]?.padraoConforto,
-        sexo: undefined, 
-        nomeMae: undefined, 
-        rg: undefined, 
-        codigoBeneficiario: authResponse.codigoBeneficiario,
-        orgaoEmissorRg: undefined, 
-        cartaoNacionalSaude: undefined, 
-        tituloEleitor: undefined, 
-        estadoCivil: undefined, 
-        profissao: undefined, 
-        pisPasep: undefined, 
-        tipoContratacao: undefined, 
-        segmentacaoAssistencial: undefined, 
-        dataFinalCPT: undefined, 
-        carencias: undefined, 
-      };
-      
-      setUser(userData);
-      // Persiste o usuário e o tempo de expiração da sessão
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("sessionExpiresAt", JSON.stringify(new Date().getTime() + SESSION_DURATION));
-
-      toast({
-        title: "Login realizado com sucesso",
-        description: `Bem-vindo, ${perfil.nome?.split(" ")[0] || "Usuário"}!`,
-      });
-      return true;
-    } catch (error: any) {
-      let errorTitle = "Erro de conexão";
-      let errorDescription =
-        "Não foi possível conectar ao servidor. Tente novamente.";
-
-      if (error.response) {
-        const status = error.response.status;
-
-        switch (status) {
-          case 401:
-            errorTitle = "CPF ou senha inválidos";
-            errorDescription = "Verifique suas credenciais e tente novamente.";
-            break;
-          case 400:
-            errorTitle = "Dados inválidos";
-            errorDescription = "Verifique os dados informados.";
-            break;
-          case 500:
-            errorTitle = "Erro do servidor";
-            errorDescription =
-              "Erro interno do servidor. Tente novamente em alguns minutos.";
-            break;
-          default:
-            errorTitle = "Erro inesperado";
-            errorDescription = `Erro ${status}. Tente novamente.`;
-        }
-      } else if (error.code === "NETWORK_ERROR") {
-        errorTitle = "Erro de rede";
-        errorDescription = "Verifique sua conexão com a internet.";
-      }
-
-      toast({
-        title: errorTitle,
-        description: errorDescription,
-        variant: "destructive",
-      });
-
-      return false;
-    } finally {
-      // setIsLoading(false);
-    }
-
-
-
-  }, [toast]);
-
-  // Cadastra senha para o usuário
-  const register = useCallback(async (cpf: number, senha: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      const response = await registerService.registerPassword({ cpf, senha });
-      toast({
-        title: "Conta criada com sucesso",
-        description: "Acesse o sistema!",
-      });
-      return true;
-
-    } catch {
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  // Cria conta inicial (sem senha ainda)
-  const createAccount = useCallback(async (cpf: number): Promise<boolean> => {
-    try {
-      const response = await registerService.createAccount({ cpf });
-
-      toast({
-        title: "Conta criada com sucesso",
-        description: "Conta criada com sucesso!",
-      });
-      return true;
-    } catch {
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   // Registra contato (telefone ou e-mail)
-  const registerContact = useCallback(async (
-    cpf: number,
-    type: "phone" | "email",
-    contact: string
-  ): Promise<boolean> => {
-    try {
+  const registerContact = useCallback(
+    async (
+      cpf: number,
+      type: "phone" | "email",
+      contact: string
+    ): Promise<boolean> => {
+      try {
+        if (type === "phone") {
+          await registerService.registerPhone({
+            cpf,
+            celular: parseInt(contact),
+          });
+        } else {
+          await registerService.registerEmail({ cpf, email: contact });
+        }
 
-      if (type === "phone") {
-        await registerService.registerPhone({
-          cpf,
-          celular: parseInt(contact),
+        toast({
+          title: "Código de verificação enviado",
+          description: `Código enviado para seu ${
+            type === "phone" ? "celular" : "e-mail"
+          }.`,
+          variant: "default",
         });
-      } else {
-        await registerService.registerEmail({ cpf, email: contact });
+
+        return true;
+      } catch (erro) {
+        console.error("Erro ao registrar contato:", erro);
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
+          variant: "destructive",
+        });
+        return false;
       }
-
-      toast({
-        title: "Código de verificação enviado",
-        description: `Código enviado para seu ${type === "phone" ? "celular" : "e-mail"}.`,
-        variant: "default"
-      });
-
-      return true;
-
-    } catch (erro) {
-      console.error('Erro ao registrar contato:', erro); // Adicione esta linha
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  }, [toast]);
+    },
+    [toast]
+  );
 
   // Confirma contato (valida token SMS ou e-mail)
-  const confirmContact = useCallback(async (
-    cpf: number,
-    type: "phone" | "email",
-    contact: string,
-    token: string
-  ): Promise<boolean> => {
-    try {
-      let response;
+  const confirmContact = useCallback(
+    async (
+      cpf: number,
+      type: "phone" | "email",
+      contact: string,
+      token: string
+    ): Promise<boolean> => {
+      try {
+        let response;
 
-      if (type === "phone") {
-        response = await registerService.confirmPhone({
-          cpf,
-          celular: parseInt(contact),
-          tokenSMS: token,
-        });
-      } else {
-        response = await registerService.confirmEmail({
-          cpf,
-          email: contact,
-          tokenEmail: token,
-        });
-      }
+        if (type === "phone") {
+          response = await registerService.confirmPhone({
+            cpf,
+            celular: parseInt(contact),
+            tokenSMS: token,
+          });
+        } else {
+          response = await registerService.confirmEmail({
+            cpf,
+            email: contact,
+            tokenEmail: token,
+          });
+        }
 
-      toast({
-        title: "Verificação realizada com sucesso",
-        description: `${type === "phone" ? "Celular" : "E-mail"
-          } verificado com sucesso!`,
-      });
-      return true;
-    } catch {
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  }, [toast]);
-
-  // Reenvia SMS de verificação
-  const resendSMS = useCallback(async (cpf: number): Promise<boolean> => {
-    try {
-      const response = await registerService.resendSMS({ cpf });
-
-      if (response.sucesso) {
         toast({
-          title: "Código reenviado",
-          description: "Novo código enviado para seu celular.",
+          title: "Verificação realizada com sucesso",
+          description: `${
+            type === "phone" ? "Celular" : "E-mail"
+          } verificado com sucesso!`,
         });
         return true;
+      } catch {
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
+          variant: "destructive",
+        });
+        return false;
       }
+    },
+    [toast]
+  );
 
-      toast({
-        title: "Erro ao reenviar código",
-        description: response.erro || "Erro ao reenviar SMS.",
-        variant: "destructive",
-      });
-      return false;
-    } catch {
-      toast({
-        title: "Erro de conexão",
-        description: "Erro no servidor. Tente novamente.",
-        variant: "destructive",
-      });
-      return false;
-    }
-  }, [toast]);
+  // Reenvia SMS de verificação
+  const resendSMS = useCallback(
+    async (cpf: number): Promise<boolean> => {
+      try {
+        const response = await registerService.resendSMS({ cpf });
+
+        if (response.sucesso) {
+          toast({
+            title: "Código reenviado",
+            description: "Novo código enviado para seu celular.",
+          });
+          return true;
+        }
+
+        toast({
+          title: "Erro ao reenviar código",
+          description: response.erro || "Erro ao reenviar SMS.",
+          variant: "destructive",
+        });
+        return false;
+      } catch {
+        toast({
+          title: "Erro de conexão",
+          description: "Erro no servidor. Tente novamente.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    },
+    [toast]
+  );
 
   const value = useMemo(
     () => ({
@@ -427,7 +472,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       confirmContact,
       resendSMS,
     }),
-    [user, isLoading, isAuthenticated, login, logout, verificaCPF, register, createAccount, registerContact, confirmContact, resendSMS]
+    [
+      user,
+      isLoading,
+      isAuthenticated,
+      login,
+      logout,
+      verificaCPF,
+      register,
+      createAccount,
+      registerContact,
+      confirmContact,
+      resendSMS,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
