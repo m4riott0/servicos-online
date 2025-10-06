@@ -41,7 +41,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const SESSION_DURATION = 30 * 60 * 1000; 
+  const SESSION_DURATION = 30 * 60 * 1000;
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true); 
   const { toast } = useToast();
@@ -103,6 +103,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       window.removeEventListener("keydown", handleActivity);
     };
   }, [user, SESSION_DURATION]);
+
+  // Verifica a expiração da sessão periodicamente
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const expiresAt = localStorage.getItem("sessionExpiresAt");
+      if (expiresAt && new Date().getTime() > JSON.parse(expiresAt)) {
+        if (user) {
+          expirarSessao();
+        }
+      }
+    }, 1000); 
+
+    return () => clearInterval(interval);
+  }, [user, expirarSessao]);
 
   const isAuthenticated = !!user;
 
