@@ -3,7 +3,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { Footer } from './Footer';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -38,7 +37,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </main>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };
@@ -47,7 +45,6 @@ export const PublicLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <main className="flex-grow">{children || <Outlet />}</main>
-      <Footer />
     </div>
   );
 };
