@@ -556,3 +556,11 @@ export interface CopartTableRequest {
 export interface CopartTableItem {
   link: string;
 }
+
+//==================================================================================================================
+//                                        carterinha types
+//==================================================================================================================
+
+export interface CarterinhaRequest {
+  perfilAutenticado: PerfilAutenticado;
+}

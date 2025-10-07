@@ -60,7 +60,7 @@ export const navigation: NavItem[] = [
   },
   {
     name: "Telemedicina",
-    href: "https://telemedicina.bensaude.com.br/",
+    href: "/tele-medicina",
     icon: ShieldPlus,
   },
   {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { User, FileSpreadsheet } from "lucide-react";
 import { format } from "date-fns";
+import { carterinhaService } from "@/services/carterinhaService";
+import type { User as UserType, ApiResponse } from "@/types/api";
 
 const DataItem: React.FC<{ label: string; value?: string | number | null }> = ({
   label,
@@ -21,7 +23,45 @@ const DataItem: React.FC<{ label: string; value?: string | number | null }> = ({
 );
 
 export const DadosContrato: React.FC = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const [userData, setUserData] = useState<Partial<UserType> | null>(authUser);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (authUser?.perfilAutenticado) {
+        try {
+          const response = await carterinhaService.dadosCarterinha({
+            perfilAutenticado: authUser.perfilAutenticado,
+          });
+
+          console.log("Response completo da API:", response);
+
+          const carterinhaData = Array.isArray(response)
+            ? response[0]
+            : response?.dados?.[0];
+
+          if (carterinhaData) {
+            const mappedData = {
+              ...carterinhaData,
+              cartaoNacionalSaude: carterinhaData.cns,
+              padraoAcomodacao: carterinhaData.acomodacao,
+              produtoContratado: carterinhaData.produto,
+              tipoContratacao: carterinhaData.tipoContrato,
+            };
+
+            setUserData((prev) => ({ ...prev, ...mappedData }));
+          } else {
+            console.warn("Nenhum dado retornado da API de carteirinha.");
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados da carteirinha:", error);
+        }
+      }
+    };
+    fetchData();
+  }, [authUser]);
+
+  const user = userData;
 
   return (
     <div className="space-y-8">
@@ -71,7 +111,10 @@ export const DadosContrato: React.FC = () => {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <DataItem label="Número do Contrato" value={user?.codigoContrato} />
-          <DataItem label="Número da Carteirinha" value={user?.numeroCarteirinha} />
+          <DataItem
+            label="Número da Carteirinha"
+            value={user?.numeroCarteirinha}
+          />
           <DataItem
             label="Data de Contratação"
             value={
@@ -80,9 +123,15 @@ export const DadosContrato: React.FC = () => {
                 : null
             }
           />
-          <DataItem label="Padrão de Acomodação" value={user?.padraoAcomodacao} />
-          <DataItem label="Tipo de Contratação" value={user?.tipoContratacao} />
-          <DataItem label="Produto Contratado" value={user?.produtoContratado} />
+          <DataItem
+            label="Padrão de Acomodação"
+            value={user?.padraoAcomodacao}
+          />
+          <DataItem label="Tipo de Contrato" value={user?.tipoContratacao} />
+          <DataItem
+            label="Produto Contratado"
+            value={user?.produtoContratado}
+          />
           <DataItem
             label="Segmentação Assistencial"
             value={user?.segmentacaoAssistencial}
