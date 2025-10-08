@@ -115,8 +115,6 @@ export const Home: React.FC = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden h-10 w-10 bg-primary/50 text-white hover:bg-primary/70 group-hover:flex disabled:hidden sm:flex" />
-          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 hidden h-10 w-10 bg-primary/50 text-white hover:bg-primary/70 group-hover:flex disabled:hidden sm:flex" />
         </Carousel>
       </div>
     </div>
