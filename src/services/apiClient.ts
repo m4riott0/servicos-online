@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
 
-//const API_BASE_URL = "https://apiapp2024.bensaude.com.br";
 const API_BASE_URL = "https://localhost:7041";
 
 type FailedRequest = {
@@ -24,7 +23,8 @@ class ApiClient {
       timeout: 30000,
     });
 
-    this.generateAndSetInitialToken();
+    // Recupera o token salvo ao iniciar
+    this.loadTokenFromStorage();
 
     this.api.interceptors.request.use(
       async (config) => {
@@ -48,7 +48,7 @@ class ApiClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-        console.error("Erro da API:", { 
+        console.error("Erro da API:", {
           url: error.config?.url,
           method: error.config?.method,
           status: error.response?.status,
@@ -56,6 +56,7 @@ class ApiClient {
           message: error.message,
         });
 
+        // Token expirado
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
@@ -67,16 +68,14 @@ class ApiClient {
                 }
                 return this.api(originalRequest);
               })
-              .catch((err) => {
-                return Promise.reject(err);
-              });
+              .catch((err) => Promise.reject(err));
           }
 
           originalRequest._retry = true;
           this.isRefreshing = true;
 
           try {
-            console.warn("Token expirado ou inválido — gerando novo token...");
+            console.warn("Token expirado — gerando novo...");
             const newToken = await this.generateToken();
             this.setToken(newToken);
 
@@ -84,15 +83,12 @@ class ApiClient {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
 
-            // Processa a fila de requisições que falharam
             this.processQueue(null, newToken);
-
-            // Tenta novamente a requisição original
             return this.api(originalRequest);
           } catch (refreshError) {
             this.processQueue(refreshError, null);
-            this.clearToken(); // Limpa o token inválido
-            console.error("Falha ao renovar o token.", refreshError);
+            this.clearToken();
+            console.error("Falha ao renovar token.", refreshError);
             return Promise.reject(refreshError);
           } finally {
             this.isRefreshing = false;
@@ -103,40 +99,61 @@ class ApiClient {
       }
     );
   }
-  
+
+  /** 🔹 Gera token ao iniciar (se não houver no localStorage) */
   private async generateAndSetInitialToken() {
+    if (this.token) return; // já tem token salvo
     try {
       const token = await this.generateToken();
       this.setToken(token);
     } catch {
-      console.log("Erro ao gerar token inicial.")
+      console.log("Erro ao gerar token inicial.");
     }
   }
 
+  /** 🔹 Gera novo token */
   private async generateToken(): Promise<string> {
     try {
       const credentials = {
         usuario: "mixd",
         senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
       };
+
       const response = await axios.post<string>(
         `${API_BASE_URL}/api/Token/GerarToken`,
-        credentials,
+        credentials
       );
+
       console.log("Novo token gerado com sucesso.");
       return response.data;
     } catch (error) {
       console.error("Erro ao gerar token:", error);
-      throw error; 
+      throw error;
     }
   }
 
+  /** 🔹 Salva token e no localStorage */
   private setToken(token: string | null) {
     this.token = token;
+
     if (token) {
       this.api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      localStorage.setItem("api_token", token);
     } else {
       delete this.api.defaults.headers.common.Authorization;
+      localStorage.removeItem("api_token");
+    }
+  }
+
+  /** 🔹 Recupera token do localStorage ao iniciar */
+  private loadTokenFromStorage() {
+    const savedToken = localStorage.getItem("api_token");
+    if (savedToken) {
+      console.log("Token carregado do localStorage.");
+      this.setToken(savedToken);
+    } else {
+      console.log("Nenhum token encontrado, gerando novo...");
+      this.generateAndSetInitialToken();
     }
   }
 
@@ -144,19 +161,11 @@ class ApiClient {
     this.setToken(null);
   }
 
-  renewToken() {
-    this.generateAndSetInitialToken();
-  }
-
   private processQueue(error: unknown, token: string | null = null) {
     this.failedQueue.forEach((prom) => {
-      if (error) {
-        prom.reject(error);
-      } else {
-        prom.resolve(token);
-      }
+      if (error) prom.reject(error);
+      else prom.resolve(token);
     });
-
     this.failedQueue = [];
   }
 

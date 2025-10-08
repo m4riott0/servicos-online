@@ -26,6 +26,49 @@ export const DadosContrato: React.FC = () => {
   const { user: authUser } = useAuth();
   const [userData, setUserData] = useState<Partial<UserType> | null>(authUser);
 
+  const formatSexo = (sexo: string | undefined): string | null => {
+    if (!sexo) {
+      return null;
+    }
+    const sexoMap: Record<string, string> = {
+      m: "Masculino",
+      f: "Feminino",
+    };
+    return sexoMap[sexo.toLowerCase()] || sexo;
+  };
+
+  const formatEstadoCivil = (estadoCivil: string | undefined): string | null => {
+    if (!estadoCivil) {
+      return null;
+    }
+    const estadoCivilMap: Record<string, string> = {
+      s: "Solteiro(a)",
+      c: "Casado(a)",
+      d: "Divorciado(a)",
+      v: "Viúvo(a)",
+    };
+    return estadoCivilMap[estadoCivil.toLowerCase()] || estadoCivil;
+  };
+  
+  const formatCpf = (cpf: number | undefined) => {
+    if (!cpf) {
+      return null;
+    }
+    const cpfString = String(cpf).padStart(11, '0');
+    return cpfString.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  };
+
+  const formatRg = (rg: string | undefined) => {
+    if (!rg) return null;
+
+    const onlyNumbers = rg.replace(/\D/g, "");
+
+    if (onlyNumbers.length === 9) {
+      return onlyNumbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+    }
+    return rg.toUpperCase();
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (authUser?.perfilAutenticado) {
@@ -33,8 +76,6 @@ export const DadosContrato: React.FC = () => {
           const response = await carterinhaService.dadosCarterinha({
             perfilAutenticado: authUser.perfilAutenticado,
           });
-
-          console.log("Response completo da API:", response);
 
           const carterinhaData = Array.isArray(response)
             ? response[0]
@@ -47,6 +88,11 @@ export const DadosContrato: React.FC = () => {
               padraoAcomodacao: carterinhaData.acomodacao,
               produtoContratado: carterinhaData.produto,
               tipoContratacao: carterinhaData.tipoContrato,
+              nomeMae: carterinhaData.nomeMae,
+              estadoCivil: carterinhaData.estadoCivil,
+              sexo: carterinhaData.sexo,
+              rg: carterinhaData.rg,
+              orgaoEmissorRg: carterinhaData.orgaoExpeditor,
             };
 
             setUserData((prev) => ({ ...prev, ...mappedData }));
@@ -83,18 +129,18 @@ export const DadosContrato: React.FC = () => {
                 ? format(new Date(user.dataNascimento), "dd/MM/yyyy")
                 : null
             }
-          />
-          <DataItem label="Sexo" value={user?.sexo} />
+          /> 
+          <DataItem label="Sexo" value={formatSexo(user?.sexo)} />
           <DataItem label="Nome da Mãe" value={user?.nomeMae} />
-          <DataItem label="CPF" value={user?.cpf} />
-          <DataItem label="RG" value={user?.rg} />
+          <DataItem label="CPF" value={formatCpf(user?.cpf)} />
+          <DataItem label="RG" value={formatRg(user?.rg)} />
           <DataItem label="Órgão Emissor do RG" value={user?.orgaoEmissorRg} />
           <DataItem
             label="Cartão Nacional de Saúde"
             value={user?.cartaoNacionalSaude}
           />
           <DataItem label="Título de Eleitor" value={user?.tituloEleitor} />
-          <DataItem label="Estado Civil" value={user?.estadoCivil} />
+          <DataItem label="Estado Civil" value={formatEstadoCivil(user?.estadoCivil)} />
           <DataItem label="Profissão" value={user?.profissao} />
           <DataItem label="PIS/PASEP" value={user?.pisPasep} />
         </CardContent>
