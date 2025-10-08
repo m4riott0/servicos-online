@@ -15,33 +15,28 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
+import { CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CreditCard, FileText, User } from "lucide-react";
+import Banner1 from '@/assets/banner1.png'
 import Banner2 from '@/assets/banner2.png'
-import Banner4 from '@/assets/banner4.png'
+import Banner3 from '@/assets/banner3.png'
+import BannerMobile1 from '@/assets/banner1_mobile.png'
+import BannerMobile2 from '@/assets/banner2_mobile.png'
+import BannerMobile3 from '@/assets/banner3_mobile.png'
 import Autoplay from "embla-carousel-autoplay";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Home: React.FC = () => {
   const { user } = useAuth();
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    if (!api) {
-      return
-    }
-
-    setCount(api.scrollSnapList().length)
-    setCurrent(api.selectedScrollSnap())
-
-    api.on("select", () => setCurrent(api.selectedScrollSnap()))
-  }, [api])
-
-  const plugin = React.useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
-  );
-  const banners = [ Banner2, Banner4];
+  const isMobile = useIsMobile();
+  const desktopBanners = [Banner1, Banner2, Banner3];
+  const mobileBanners = [BannerMobile1, BannerMobile2, BannerMobile3];
+  const banners = isMobile ? mobileBanners : desktopBanners;
+  const plugin = React.useRef(Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   return (
     <div className="space-y-8">
@@ -109,31 +104,19 @@ export const Home: React.FC = () => {
           opts={{
             loop: true,
           }}
-          onMouseEnter={() => plugin.current.stop()}
-          onMouseLeave={() => plugin.current.play()}
         >
           <CarouselContent>
             {banners.map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="overflow-hidden rounded-lg h-[300px]">
-                  <img src={banner} alt={`Banner ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                <div className={`overflow-hidden rounded-lg ${isMobile ? 'h-[180px]' : 'h-[300px]'}`}>
+                  <img src={banner} alt={`Banner ${index + 1}`} className="w-full h-full object-contain rounded-lg" />
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
+          <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10 hidden h-10 w-10 bg-primary/50 text-white hover:bg-primary/70 group-hover:flex disabled:hidden sm:flex" />
+          <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10 hidden h-10 w-10 bg-primary/50 text-white hover:bg-primary/70 group-hover:flex disabled:hidden sm:flex" />
         </Carousel>
-        {/* Indicadores de Pontos (Dots) */}
-        <div className="flex justify-center gap-2 mt-4">
-          {Array.from({ length: count }).map((_, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="icon"
-              className={`h-2 w-2 rounded-full p-0 transition-colors ${index === current ? 'bg-primary' : 'bg-muted hover:bg-muted-foreground/50'}`}
-              onClick={() => api?.scrollTo(index)}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
