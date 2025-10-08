@@ -44,7 +44,8 @@ export const Home: React.FC = () => {
       <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Olá, {user?.nome}</h1>
+            <h1 className="text-3xl font-bold mb-2">Olá,</h1>
+            <h2 className="text-2xl font-semibold mb-4">{user?.nome}</h2>
             <p className="text-muted-foreground text-lg">
               Gerencie seus benefícios de saúde com facilidade
             </p>
