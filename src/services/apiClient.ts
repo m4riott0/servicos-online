@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
 
-const API_BASE_URL = "https://localhost:7041";
+// Use Vite's env (import.meta.env). Accessing `process.env` in the browser
+// can throw ReferenceError (process is not defined). Keep a safe fallback.
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? "";
 
 type FailedRequest = {
   resolve: (value: any) => void;
@@ -15,7 +17,9 @@ class ApiClient {
 
   constructor() {
     this.api = axios.create({
-      baseURL: API_BASE_URL,
+      // If API_BASE_URL is empty, leave baseURL undefined so axios uses
+      // relative URLs (useful for dev proxy or when env var isn't set).
+      baseURL: API_BASE_URL || undefined,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -119,10 +123,11 @@ class ApiClient {
         senha: "25f003f3c343d87018b8c0b4e264d268528c90000e9c3bb182084f14c14c0137",
       };
 
-      const response = await axios.post<string>(
-        `${API_BASE_URL}/api/Token/GerarToken`,
-        credentials
-      );
+      const tokenUrl = API_BASE_URL
+        ? `${API_BASE_URL}/api/Token/GerarToken`
+        : "/api/Token/GerarToken";
+
+      const response = await axios.post<string>(tokenUrl, credentials);
 
       console.log("Novo token gerado com sucesso.");
       return response.data;
