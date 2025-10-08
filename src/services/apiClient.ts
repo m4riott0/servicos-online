@@ -1,7 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
 
-// Use Vite's env (import.meta.env). Accessing `process.env` in the browser
-// can throw ReferenceError (process is not defined). Keep a safe fallback.
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL ?? "";
 
 type FailedRequest = {
@@ -17,8 +15,6 @@ class ApiClient {
 
   constructor() {
     this.api = axios.create({
-      // If API_BASE_URL is empty, leave baseURL undefined so axios uses
-      // relative URLs (useful for dev proxy or when env var isn't set).
       baseURL: API_BASE_URL || undefined,
       headers: {
         "Content-Type": "application/json",
