@@ -67,7 +67,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("sessionExpiresAt");
     apiClient.clearToken();
-    // await apiClient.renewToken(); // Geralmente não é necessário renovar token ao expirar/sair.
     toast({
       title: "Sessão encerrada",
       description: "Sua sessão expirou por inatividade.",
@@ -81,7 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("sessionExpiresAt");
       apiClient.clearToken();
-      // await apiClient.renewToken(); // Geralmente não é necessário renovar token ao expirar/sair.
       if (showToast) {
         toast({
           title: "Você saiu",
@@ -137,7 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [user, expirarSessao]); // expirarSessao já tem suas dependências
+  }, [user, expirarSessao]);
 
   const isAuthenticated = !!user;
 
@@ -193,7 +191,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const verificationResponse = await authService.verificaCPF({ cpf });
         if (!verificationResponse) {
-          // A função verificaCPF já mostra um toast de erro, então apenas retornamos.
+        
           return false;
         }
         const ehBeneficiary = verificationResponse.beneficiario;
