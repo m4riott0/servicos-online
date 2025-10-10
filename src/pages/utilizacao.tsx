@@ -63,7 +63,6 @@ export const Utilizacao: React.FC = () => {
     "CONSULTAS",
     "EXAMES_TERAPIAS",
     "INTERNACAO",
-    "ODONTOLOGICO",
     "OUTRAS_DESPESAS",
   ];
 
