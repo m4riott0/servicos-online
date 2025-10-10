@@ -37,6 +37,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// Extrai a lista de utilizações da resposta da API.
 const getUtilizationsFromResponse = (response: any): UtilizacaoItem[] => {
   const data =
     response && typeof response === "object" && "procedimentos" in response
@@ -45,11 +46,18 @@ const getUtilizationsFromResponse = (response: any): UtilizacaoItem[] => {
   return Array.isArray(data) ? data : [];
 };
 
+// Extrai e ajusta a lista de beneficiários da API (mapeia `codigoBeneficiario` para `codigo`).
 const getBeneficiariesFromResponse = (response: any): Beneficiary[] => {
   const data = (response as any)?.dados ?? response;
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) return [];
+
+  return data.map((item: any) => ({
+    codigo: item.codigoBeneficiario,
+    nome: item.nome,
+  }));
 };
 
+// Página de Histórico de Utilização
 export const Utilizacao: React.FC = () => {
   const categories = [
     "CONSULTAS",
@@ -59,6 +67,7 @@ export const Utilizacao: React.FC = () => {
     "OUTRAS_DESPESAS",
   ];
 
+  // Formata os nomes das categorias para exibição.
   const formatCategories = (categories: string): string => {
     switch (categories) {
       case "CONSULTAS":
@@ -76,6 +85,7 @@ export const Utilizacao: React.FC = () => {
     }
   };
 
+  // Estados do componente
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<string>("");
   const [utilizations, setUtilizations] = useState<UtilizacaoItem[]>([]);
@@ -91,6 +101,7 @@ export const Utilizacao: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Busca o histórico de utilização para um beneficiário.
   const fetchUtilizations = useCallback(
     async (beneficiaryCode: string) => {
       if (!user?.perfilAutenticado) return;
@@ -130,11 +141,12 @@ export const Utilizacao: React.FC = () => {
         setIsHistoryLoading(false);
       }
     },
-    [user, toast]
+    [user?.perfilAutenticado, toast]
   );
 
+  // Carrega a lista de beneficiários quando a página abre.
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadInitialData = async () => {      
       if (!user?.perfilAutenticado) return;
 
       setIsLoading(true);
@@ -150,11 +162,10 @@ export const Utilizacao: React.FC = () => {
         setBeneficiaries(loadedBeneficiaries);
 
         if (loadedBeneficiaries.length > 0) {
-          // Se houver apenas um beneficiário, seleciona-o automaticamente.
-          // Caso contrário, usa o beneficiário logado ou o primeiro da lista.
-          const initialBeneficiaryCode =
-            loadedBeneficiaries.length === 1 ? loadedBeneficiaries[0].codigo :
-            user.codigoBeneficiario || loadedBeneficiaries[0]?.codigo;
+          const initialBeneficiaryCode = 
+            loadedBeneficiaries.length === 1 
+              ? loadedBeneficiaries[0].codigo 
+              : user.codigoBeneficiario || loadedBeneficiaries[0]?.codigo;
           setSelectedBeneficiary(initialBeneficiaryCode);
         }
       } catch (error) {
@@ -175,18 +186,22 @@ export const Utilizacao: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, [user, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
+  // Busca o histórico sempre que o beneficiário selecionado muda.
   useEffect(() => {
     if (selectedBeneficiary) {
       fetchUtilizations(selectedBeneficiary);
     }
   }, [selectedBeneficiary, fetchUtilizations]);
 
+  // Atualiza o beneficiário selecionado quando o usuário troca no select.
   const handleBeneficiaryChange = (beneficiaryCode: string) => {
     setSelectedBeneficiary(beneficiaryCode);
   };
 
+  // Envia a avaliação do atendimento.
   const handleAvaliarAtendimento = async () => {
     if (!user?.perfilAutenticado || !selectedUtilization || rating === 0) {
       toast({
@@ -196,7 +211,7 @@ export const Utilizacao: React.FC = () => {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       await utilizacaoService.avaliarAtendimento({
@@ -235,6 +250,7 @@ export const Utilizacao: React.FC = () => {
     }
   };
 
+  // Agrupa as utilizações por categoria para exibição.
   const groupedUtilizations = useMemo(() => {
     const initialGroups: Record<
       string,
@@ -256,6 +272,7 @@ export const Utilizacao: React.FC = () => {
     return initialGroups;
   }, [utilizations, categories]);
 
+  // Renderização do componente
   return (
     <div className="space-y-8">
       <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-2xl p-8">
